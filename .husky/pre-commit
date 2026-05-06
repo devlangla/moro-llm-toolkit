@@ -1,0 +1,21 @@
+echo "🔨 Pre-commit: Running full build check..."
+echo "   ⏳ This may take 1-2 minutes. Please wait..."
+
+# Web build (vite)
+echo ""
+echo "📦 Building web..."
+(cd src/web && bun run build) || {
+  echo "❌ Web build failed! Commit aborted."
+  exit 1
+}
+
+# Server typecheck (tsc with increased memory)
+echo ""
+echo "📦 Building server..."
+(cd src/server && node --max-old-space-size=4096 ./node_modules/.bin/tsc -b) || {
+  echo "❌ Server build failed! Commit aborted."
+  exit 1
+}
+
+echo ""
+echo "✅ Build succeeded. Proceeding with commit."
