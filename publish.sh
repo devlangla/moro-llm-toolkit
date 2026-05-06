@@ -8,19 +8,7 @@ echo ""
 echo "🤖 Moro Agent — Build & Publish"
 echo ""
 
-# ── 1. Build validation ────────────────────────────────────────────────────────
-# Build first to ensure everything is correct before touching versions
-echo "📦 [1/5] Validating Web build (vite)..."
-(cd src/web && bun run build) || { echo "❌ Web build failed!"; exit 1; }
-
-echo "📦 [2/5] Validating Server build (tsc)..."
-echo "   ⏳ Note: This step performs heavy type checking and may take 1-2 minutes. Please wait..."
-(cd src/server && bun run build) || { echo "❌ Server build failed!"; exit 1; }
-
-echo "✅ Build validation successful!"
-echo ""
-
-# ── 2. Version selection ────────────────────────────────────────────────────────
+# ── 1. Version selection (BEFORE build so version is baked into the bundle) ────
 CURRENT_VERSION=$(node -p "require('./package.json').version")
 
 IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
@@ -47,7 +35,7 @@ case "$CHOICE" in
   *) echo "❌ Invalid choice"; exit 1 ;;
 esac
 
-# ── 3. Apply version bump ──────────────────────────────────────────────────────
+# ── 2. Apply version bump ──────────────────────────────────────────────────────
 if [ "$NEW_VERSION" != "$CURRENT_VERSION" ]; then
   echo ""
   echo "✏️  Bumping version → $NEW_VERSION"
@@ -56,13 +44,21 @@ if [ "$NEW_VERSION" != "$CURRENT_VERSION" ]; then
   sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"$NEW_VERSION\"/" src/web/package.json
 fi
 
+# ── 3. Build (version is now correct in package.json → injected into bundle) ──
+echo ""
+echo "📦 [1/5] Building Web (vite)..."
+(cd src/web && bun run build) || { echo "❌ Web build failed!"; exit 1; }
+
+echo "📦 [2/5] Building Server (bun bundle with version $NEW_VERSION)..."
+(cd src/server && bun run build) || { echo "❌ Server build failed!"; exit 1; }
+
+echo "✅ Build successful! (v$NEW_VERSION baked into bundle)"
+echo ""
+
 # ── 4. Prepare publish layout ───────────────────────────────────────────────────
 echo ""
 echo "📁 [3/5] Preparing publish layout..."
-rm -rf dist public
-
-# Server compiled output
-cp -r src/server/dist ./dist
+rm -rf public
 
 # Web static files → ./public (server looks for ../public relative to dist/)
 cp -r src/web/dist ./public
