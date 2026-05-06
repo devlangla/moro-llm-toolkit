@@ -32,7 +32,7 @@ export async function startServer(options: ServerOptions = {}): Promise<void> {
   // Initialize DB singleton
   getDb(dataDir);
 
-  // Auto-seed: nếu chưa có user nào → tạo super admin mặc định
+  // Auto-seed: if no users exist → create default super admin
   await seedDefaultAdmin();
 
   const app = await createApp();

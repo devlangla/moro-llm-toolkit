@@ -525,7 +525,7 @@ function ConfigTab({
           />
         </div>
         <p className="text-[12px] text-muted mt-2 mb-0">
-          Streamable HTTP transport — tương thích với MCP SDK 2025+
+          Streamable HTTP transport — compatible with MCP SDK 2025+
         </p>
       </div>
 
@@ -550,14 +550,14 @@ function ConfigTab({
                 API Key (Recommended)
               </div>
               <div className="text-[12px] text-muted mt-0.5">
-                Tạo API Key trong{" "}
+                Create an API Key in{" "}
                 <a
                   href="/api-keys"
                   className="text-ink underline hover:no-underline"
                 >
                   Settings → API Keys
                 </a>
-                , sau đó truyền vào header:
+                , then pass it in the header:
               </div>
               <div className="mt-2 flex items-center gap-2 px-3 py-2 rounded-md bg-canvas border border-hairline font-mono text-[12px] text-ink">
                 <span className="text-muted-soft">Authorization:</span> Bearer
@@ -575,7 +575,7 @@ function ConfigTab({
                 JWT Bearer Token
               </div>
               <div className="text-[12px] text-muted mt-0.5">
-                Dùng access token từ <code className="text-[11px] bg-canvas px-1 py-0.5 rounded border border-hairline">POST /api/auth/login</code> — phù hợp cho dev/testing.
+                Use the access token from <code className="text-[11px] bg-canvas px-1 py-0.5 rounded border border-hairline">POST /api/auth/login</code> — suitable for dev/testing.
               </div>
             </div>
           </div>
@@ -585,7 +585,7 @@ function ConfigTab({
       {/* Cursor */}
       <ConfigBlock
         title="Cursor"
-        subtitle="Thêm vào .cursor/mcp.json trong project root"
+        subtitle="Add to .cursor/mcp.json in your project root"
         code={cursorConfig}
         field="cursor"
         copiedField={copiedField}
@@ -596,7 +596,7 @@ function ConfigTab({
       {/* Claude Code */}
       <ConfigBlock
         title="Claude Code"
-        subtitle="Chạy command trong terminal"
+        subtitle="Run this command in your terminal"
         code={claudeCodeCmd}
         field="claudecode"
         copiedField={copiedField}
@@ -607,7 +607,7 @@ function ConfigTab({
       {/* Antigravity (Gemini) */}
       <ConfigBlock
         title="Antigravity / Gemini"
-        subtitle="Thêm vào .gemini/settings.json"
+        subtitle="Add to .gemini/settings.json"
         code={antigravityConfig}
         field="antigravity"
         copiedField={copiedField}

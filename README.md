@@ -2,7 +2,7 @@
 
 **Self-hosted infrastructure toolkit for LLM agents and AI applications.**
 
-Moro LLM Toolkit là một bộ công cụ tự host, cung cấp tất cả các primitives mà LLM agents cần để hoạt động: state storage, knowledge base, tool execution, file storage, và dynamic API — được đóng gói trong một server duy nhất với Web UI đi kèm.
+Moro LLM Toolkit is a self-hosted toolkit that provides all the primitives LLM agents need to operate: state storage, knowledge base, tool execution, file storage, and dynamic APIs — packaged in a single server with a built-in Web UI.
 
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Runtime](https://img.shields.io/badge/runtime-Bun-%23f472b6)
@@ -10,38 +10,38 @@ Moro LLM Toolkit là một bộ công cụ tự host, cung cấp tất cả các
 
 ---
 
-## Tại sao cần Moro LLM Toolkit?
+## Why Moro LLM Toolkit?
 
-Khi xây dựng LLM agents và AI pipelines, bạn thường cần:
+When building LLM agents and AI pipelines, you typically need:
 
-- **Nơi lưu state** — agents cần đọc/ghi runtime variables giữa các lần chạy
-- **Nơi lưu dữ liệu có cấu trúc** — tables với custom columns, sort/filter như Notion
-- **Nơi lưu tài liệu** — knowledge base dạng block editor cho agents retrieval
-- **Nơi lưu files** — object storage cho documents, images, artifacts
-- **Tools cho agents** — Python tools chạy sandbox, expose qua MCP protocol
-- **Custom HTTP endpoints** — dynamic API viết bằng Python chạy runtime
+- **State storage** — agents need to read/write runtime variables across runs
+- **Structured data storage** — tables with custom columns, sort/filter like Notion
+- **Document storage** — knowledge base with a block editor for agent retrieval
+- **File storage** — object storage for documents, images, artifacts
+- **Agent tools** — Python tools running in a sandbox, exposed via MCP protocol
+- **Custom HTTP endpoints** — dynamic APIs written in Python at runtime
 
-Thay vì tích hợp nhiều dịch vụ riêng lẻ (Redis, Notion, S3, custom tool server...), Moro LLM Toolkit gom tất cả vào **một self-hosted server** duy nhất.
+Instead of integrating multiple separate services (Redis, Notion, S3, custom tool server...), Moro LLM Toolkit bundles everything into **a single self-hosted server**.
 
 ---
 
 ## Features
 
-| Module | Mô tả |
+| Module | Description |
 |---|---|
 | 👤 **User Management** | Authentication, RBAC, session management, API key management |
-| 🔑 **Dynamic Variables** | Redis-like key-value store với data types, TTL, namespaces |
-| 📊 **Dynamic Table** | Notion-style database với custom columns, sort/filter, multiple views |
+| 🔑 **Dynamic Variables** | Redis-like key-value store with data types, TTL, namespaces |
+| 📊 **Dynamic Table** | Notion-style database with custom columns, sort/filter, multiple views |
 | 📝 **Documents** | Block-based document editor (Notion-style), organized into Projects |
 | 📦 **Storage** | Self-hosted S3-compatible object storage: buckets, upload/download, presigned URLs |
-| 🔌 **MCP Servers** | Quản lý Model Context Protocol servers + Python tools chạy sandbox |
-| ⚡ **Dynamic API** | Tạo HTTP API endpoints at runtime bằng Python code |
+| 🔌 **MCP Servers** | Manage Model Context Protocol servers + Python tools running in a sandbox |
+| ⚡ **Dynamic API** | Create HTTP API endpoints at runtime using Python code |
 
 ---
 
 ## Quick Start
 
-### Yêu cầu
+### Prerequisites
 
 [Bun](https://bun.sh/) runtime ≥ 1.2.
 
@@ -49,23 +49,23 @@ Thay vì tích hợp nhiều dịch vụ riêng lẻ (Redis, Notion, S3, custom 
 curl -fsSL https://bun.sh/install | bash
 ```
 
-### Cài đặt
+### Installation
 
 ```bash
 bun add -g moro-llm-toolkit
 ```
 
-### Khởi chạy
+### Launch
 
 ```bash
-# Khởi động server (background daemon)
+# Start the server (background daemon)
 moro-llm-toolkit start
 
-# Mở Web UI
+# Open the Web UI
 open http://localhost:18080
 ```
 
-Web UI được bundle sẵn và phục vụ tự động — không cần cài thêm gì.
+The Web UI is pre-bundled and served automatically — no additional setup required.
 
 ---
 
@@ -77,91 +77,91 @@ moro-llm-toolkit <command> [options]
 
 ### Commands
 
-| Command     | Mô tả                              |
+| Command     | Description                         |
 |-------------|-------------------------------------|
-| `start`     | Khởi động server (daemon mode)      |
-| `stop`      | Dừng server đang chạy              |
-| `restart`   | Khởi động lại server               |
-| `status`    | Kiểm tra trạng thái server          |
-| `logs`      | Xem server logs                    |
-| `version`   | In version                         |
-| `help`      | Hiển thị help                      |
+| `start`     | Start the server (daemon mode)      |
+| `stop`      | Stop the running server             |
+| `restart`   | Restart the server                  |
+| `status`    | Check server status                 |
+| `logs`      | View server logs                    |
+| `version`   | Print version                       |
+| `help`      | Show help                           |
 
 ### Options
 
 **`start` / `restart`:**
 
-| Flag                  | Default               | Mô tả              |
-|-----------------------|-----------------------|--------------------|
-| `--port <number>`     | `18080`               | Server port        |
-| `--host <string>`     | `127.0.0.1`           | Server host        |
-| `--data-dir <path>`   | `~/.moro-llm-toolkit` | Thư mục lưu dữ liệu |
-| `-f, --foreground`    | —                     | Chạy foreground    |
+| Flag                  | Default               | Description          |
+|-----------------------|-----------------------|----------------------|
+| `--port <number>`     | `18080`               | Server port          |
+| `--host <string>`     | `127.0.0.1`           | Server host          |
+| `--data-dir <path>`   | `~/.moro-llm-toolkit` | Data directory       |
+| `-f, --foreground`    | —                     | Run in foreground    |
 
 **`logs`:**
 
-| Flag                | Default | Mô tả                          |
+| Flag                | Default | Description                     |
 |---------------------|---------|--------------------------------|
-| `--lines <number>`  | `50`    | Số dòng log hiển thị           |
-| `--follow`          | —       | Theo dõi log liên tục (tail)   |
+| `--lines <number>`  | `50`    | Number of log lines to display |
+| `--follow`          | —       | Tail logs continuously         |
 
-### Ví dụ
+### Examples
 
 ```bash
-# Khởi động với port tuỳ chỉnh
+# Start with a custom port
 moro-llm-toolkit start --port 8080
 
-# Expose ra mạng nội bộ
+# Expose on the local network
 moro-llm-toolkit start --host 0.0.0.0
 
-# Chạy foreground để debug
+# Run in foreground for debugging
 moro-llm-toolkit start --foreground
 
-# Xem live logs
+# View live logs
 moro-llm-toolkit logs --follow
 
-# Kiểm tra trạng thái
+# Check status
 moro-llm-toolkit status
 
-# Dừng server
+# Stop the server
 moro-llm-toolkit stop
 ```
 
 ---
 
-## Đăng nhập lần đầu
+## First Login
 
-Khi khởi động lần đầu mà chưa có tài khoản nào, server tự động tạo tài khoản super admin mặc định:
+On first startup when no accounts exist, the server automatically creates a default super admin account:
 
-| Field    | Giá trị           |
+| Field    | Value             |
 |----------|-------------------|
 | Username | `admin`           |
 | Email    | `admin@local.com` |
 | Password | `admin123`        |
 
 > [!WARNING]
-> **Đổi mật khẩu ngay sau lần đăng nhập đầu tiên!** Tài khoản mặc định có quyền super admin và mật khẩu rất đơn giản.
+> **Change the password immediately after the first login!** The default account has super admin privileges and a very simple password.
 
-### Cách đổi mật khẩu
+### How to Change the Password
 
-**Qua Web UI:**
+**Via Web UI:**
 
-1. Mở `http://localhost:18080` và đăng nhập với credentials mặc định ở trên
-2. Click vào avatar/tên tài khoản ở góc trên bên phải
-3. Chọn **Profile** hoặc **Account Settings**
-4. Nhập mật khẩu cũ (`admin123`) và mật khẩu mới
-5. Lưu lại
+1. Open `http://localhost:18080` and log in with the default credentials above
+2. Click on the avatar/account name in the top right corner
+3. Select **Profile** or **Account Settings**
+4. Enter the old password (`admin123`) and the new password
+5. Save
 
-**Qua API:**
+**Via API:**
 
 ```bash
-# 1. Đăng nhập để lấy token
+# 1. Log in to get a token
 TOKEN=$(curl -s -X POST http://localhost:18080/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"login":"admin","password":"admin123"}' \
   | jq -r '.token')
 
-# 2. Đổi mật khẩu
+# 2. Change the password
 curl -X POST http://localhost:18080/api/auth/change-password \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
@@ -172,7 +172,7 @@ curl -X POST http://localhost:18080/api/auth/change-password \
 
 ## Data Storage
 
-Toàn bộ dữ liệu được lưu trong thư mục data (`~/.moro-llm-toolkit` mặc định):
+All data is stored in the data directory (`~/.moro-llm-toolkit` by default):
 
 ```
 ~/.moro-llm-toolkit/
@@ -186,7 +186,7 @@ Toàn bộ dữ liệu được lưu trong thư mục data (`~/.moro-llm-toolkit
 
 ## REST API
 
-Server expose REST API tại `http://localhost:18080/api`. Tài liệu API đầy đủ có thể xem tại:
+The server exposes a REST API at `http://localhost:18080/api`. Full API documentation is available at:
 
 ```
 http://localhost:18080/docs
@@ -194,7 +194,7 @@ http://localhost:18080/docs
 
 ### Authentication
 
-Tất cả API endpoints yêu cầu authentication qua một trong hai cách:
+All API endpoints require authentication via one of two methods:
 
 **Bearer Token** (session-based):
 ```http
@@ -206,12 +206,12 @@ Authorization: Bearer <token>
 X-API-Key: <api-key>
 ```
 
-### Các nhóm endpoint chính
+### Main Endpoint Groups
 
-| Prefix | Mô tả |
+| Prefix | Description |
 |---|---|
-| `POST /api/auth/login` | Đăng nhập, lấy token |
-| `GET /api/users` | Quản lý users |
+| `POST /api/auth/login` | Log in, get token |
+| `GET /api/users` | User management |
 | `GET /api/variables` | Dynamic Variables CRUD |
 | `GET /api/databases` | Dynamic Tables CRUD |
 | `GET /api/documents` | Documents & Projects CRUD |
@@ -219,18 +219,18 @@ X-API-Key: <api-key>
 | `GET /api/mcp-tool-servers` | MCP Server management |
 | `GET /api/api-keys` | API Key management |
 
-> Chi tiết request/response schemas xem tại `/docs` khi server đang chạy.
+> See detailed request/response schemas at `/docs` while the server is running.
 
 ---
 
-## Tích hợp với LLM Agents
+## Integration with LLM Agents
 
 ### Dynamic Variables — Agent State Storage
 
-Agents có thể đọc/ghi state thông qua Variables API:
+Agents can read/write state via the Variables API:
 
 ```javascript
-// Ghi state
+// Write state
 await fetch('http://localhost:18080/api/variables', {
   method: 'POST',
   headers: { 'X-API-Key': 'your-key', 'Content-Type': 'application/json' },
@@ -239,44 +239,44 @@ await fetch('http://localhost:18080/api/variables', {
     key: 'current_step',
     value: '3',
     type: 'string',
-    ttl: 3600  // Tự động xoá sau 1 giờ
+    ttl: 3600  // Auto-delete after 1 hour
   })
 });
 
-// Đọc state
+// Read state
 const res = await fetch('http://localhost:18080/api/variables/agent:session-123/current_step', {
   headers: { 'X-API-Key': 'your-key' }
 });
 ```
 
-### MCP Servers — Tools cho Agents
+### MCP Servers — Tools for Agents
 
-Kết nối LLM client (Claude, Cursor, Cline...) tới MCP endpoint:
+Connect your LLM client (Claude, Cursor, Cline...) to the MCP endpoint:
 
 ```
 http://localhost:18080/api/mcp-tool-servers/<server-id>/mcp
 ```
 
-Built-in system server expose các tools tích hợp sẵn (đọc variables, query tables...). Custom servers cho phép viết Python tools tuỳ chỉnh:
+The built-in system server exposes integrated tools (read variables, query tables...). Custom servers allow you to write custom Python tools:
 
 ```python
-# Ví dụ Python tool trong Moro MCP Server
+# Example Python tool in Moro MCP Server
 def search_knowledge_base(query: str) -> str:
-    """Tìm kiếm trong knowledge base"""
-    # Tool code chạy trong sandbox
+    """Search the knowledge base"""
+    # Tool code runs in a sandbox
     results = db.query(query)
     return json.dumps(results)
 ```
 
 ### Dynamic API — Custom HTTP Endpoints
 
-Tạo HTTP endpoint tại runtime mà không cần deploy lại:
+Create HTTP endpoints at runtime without redeploying:
 
 ```python
-# Endpoint code (Python, chạy sandbox)
+# Endpoint code (Python, sandboxed)
 def handle(request):
     data = request.json()
-    # Xử lý logic tuỳ chỉnh
+    # Custom processing logic
     return {"result": process(data)}
 ```
 
@@ -284,7 +284,7 @@ def handle(request):
 
 ## Tech Stack
 
-| Layer | Công nghệ |
+| Layer | Technology |
 |---|---|
 | **Runtime** | [Bun](https://bun.sh/) ≥ 1.2 |
 | **Server** | [Fastify](https://fastify.dev/) + fastify-type-provider-zod |
@@ -298,14 +298,14 @@ def handle(request):
 ## Development
 
 ```bash
-# Clone repo
+# Clone the repo
 git clone https://github.com/devlangla/moro-llm-toolkit.git
 cd moro-llm-toolkit
 
-# Cài dependencies
+# Install dependencies
 bun install
 
-# Khởi động dev servers (API + Vite HMR chạy song song)
+# Start dev servers (API + Vite HMR running in parallel)
 bun run dev
 
 # Type check
@@ -316,7 +316,7 @@ bun run typecheck:web
 bun run biome:check
 ```
 
-### Cấu trúc dự án
+### Project Structure
 
 ```
 moro-llm-toolkit/
@@ -347,9 +347,9 @@ moro-llm-toolkit/
 └── public/                        # Bundled web assets (production)
 ```
 
-### Thêm module mới
+### Adding a New Module
 
-Mỗi feature là một module độc lập. Tạo thư mục trong `src/server/src/modules/<tên>/` với 4 files:
+Each feature is an independent module. Create a directory in `src/server/src/modules/<name>/` with 4 files:
 
 ```
 src/server/src/modules/my-feature/
@@ -359,7 +359,7 @@ src/server/src/modules/my-feature/
 └── my-feature.schema.ts      # Zod schemas
 ```
 
-Module tự động được load — không cần sửa `app.ts`.
+Modules are auto-loaded — no need to modify `app.ts`.
 
 ---
 
@@ -369,7 +369,7 @@ Module tự động được load — không cần sửa `app.ts`.
 # Build image
 docker build -t moro-llm-toolkit -f docker/Dockerfile .
 
-# Chạy với volume mount cho data
+# Run with a volume mount for data
 docker run -d \
   -p 18080:18080 \
   -v ~/.moro-data:/data \

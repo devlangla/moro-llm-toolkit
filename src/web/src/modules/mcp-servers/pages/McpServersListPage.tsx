@@ -42,7 +42,7 @@ export default function McpServersListPage() {
       content: (
         <span className="flex items-center gap-2">
           <Construction size={16} />
-          Custom MCP servers đang được phát triển — Coming Soon!
+          Custom MCP servers are under development — Coming Soon!
         </span>
       ),
       duration: 3,
@@ -64,7 +64,7 @@ export default function McpServersListPage() {
               MCP Servers
             </h1>
             <p className="text-[13px] text-muted mt-1 m-0">
-              Model Context Protocol servers cho AI agents kết nối và sử dụng tools
+              Model Context Protocol servers for AI agents to connect and use tools
             </p>
           </div>
           <button
@@ -153,13 +153,13 @@ export default function McpServersListPage() {
                   Custom MCP Server
                 </div>
                 <div className="text-[12px] text-muted-soft leading-relaxed">
-                  Tạo MCP server tùy chỉnh với Python tools — Coming Soon
+                  Create custom MCP server with Python tools — Coming Soon
                 </div>
               </div>
               <div className="flex items-center gap-2 border-t border-hairline-soft pt-4 mt-auto">
                 <Construction size={13} className="text-muted-soft" />
                 <span className="font-mono text-[10px] text-muted-soft tracking-wider uppercase">
-                  ĐANG PHÁT TRIỂN
+                  IN DEVELOPMENT
                 </span>
               </div>
             </div>
