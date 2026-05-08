@@ -1,45 +1,40 @@
 <feature>
   <meta>
-    <id>mcp_builtin_server</id>
-    <title>Built-in MCP Server (System)</title>
+    <id>mcp_builtin</id>
+    <title>Built-in MCP Server (System Tools)</title>
     <group>MCP Servers</group>
-    <status>planned</status>
+    <status>done</status>
     <priority>p0</priority>
-    <updated>2026-05-05</updated>
   </meta>
 
   <overview>
-    Hệ thống luôn có sẵn một MCP server mặc định — **"System Tools"**. Server
-    này không thể xoá hoặc đổi tên, và tự động expose các tool tương tác với
-    internal services của toolkit. Khi AI agent kết nối qua MCP protocol, tất
-    cả system tools đều available ngay mà không cần cấu hình thêm.
+    MCP server tích hợp sẵn, expose toàn bộ tính năng hệ thống (Variables, Tables,
+    Documents, Storage) cho AI agents qua 3 meta-tools: get_overview, get_docs, execute.
+    Agents gọi execute({ action, payload }) để thực hiện bất kỳ action nào.
   </overview>
 
   <user-stories>
     <story id="US-01">
-      <actor>AI Agent</actor>
-      <action>kết nối tới MCP endpoint mặc định</action>
-      <benefit>truy cập toàn bộ system tools (Variables, Tables, Docs, Files) mà không cần cấu hình</benefit>
-    </story>
-    <story id="US-02">
-      <actor>Admin</actor>
-      <action>xem Built-in MCP server trong danh sách</action>
-      <benefit>biết server nào là system, server nào là custom</benefit>
+      <actor>AI Agent (Claude, GPT, etc.)</actor>
+      <action>connect MCP server → gọi get_overview → chọn action → execute</action>
+      <benefit>truy cập toàn bộ hệ thống qua MCP protocol</benefit>
     </story>
   </user-stories>
-
-  <acceptance-criteria>
-    <criterion id="AC-01">Hệ thống seed một MCP server record trong DB khi khởi tạo: id = "mcp_system", name = "System Tools", type = "builtin".</criterion>
-    <criterion id="AC-02">Server này KHÔNG thể xoá, đổi tên, hoặc thay đổi type.</criterion>
-    <criterion id="AC-03">Server tự động expose các system tools:
-      - **variables.get** / **variables.set** / **variables.delete** / **variables.list**
-      - **tables.query** / **tables.insert** / **tables.update** / **tables.delete**
-      - **documents.get** / **documents.search** / **documents.create** / **documents.update**
-      - **files.list** / **files.get_url** / **files.upload** / **files.delete**
-    </criterion>
-    <criterion id="AC-04">Mỗi system tool có: name, description, inputSchema (JSON Schema), và execute function.</criterion>
-    <criterion id="AC-05">System tools KHÔNG sử dụng Python sandbox — chúng gọi trực tiếp internal service layer (TypeScript).</criterion>
-    <criterion id="AC-06">Trên UI, Built-in server hiển thị badge "System" và không có nút Delete/Rename.</criterion>
-    <criterion id="AC-07">DB schema cho MCP servers: id, name, description, type (enum: "builtin" | "custom"), isActive, createdAt, updatedAt.</criterion>
-  </acceptance-criteria>
 </feature>
+
+## Server
+- [x] MCP server chạy tại /api/mcp/:serverId (Streamable HTTP transport)
+- [x] 3 meta-tools: get_overview, get_docs({ action }), execute({ action, payload })
+- [x] Action registry quản lý tất cả actions, validate payload bằng Zod
+- [x] Danh sách actions đã register:
+  - Variables: `variables.list`, `variables.get`, `variables.set`, `variables.delete`
+  - Variable Namespaces: `variable_namespaces.list`, `variable_namespaces.create`, `variable_namespaces.update`, `variable_namespaces.delete`
+  - Databases & Tables: `databases.list`, `tables.list`, `tables.query`, `tables.insert`, `tables.update`, `tables.delete`
+  - Documents: `projects.list`, `documents.list`, `documents.get`, `documents.create`, `documents.update`
+  - Storage: `storage.list_buckets`, `storage.list_objects`, `storage.get_object_info`, `storage.get_download_url`, `storage.delete_object`
+- [x] Auth: JWT Bearer hoặc API key
+
+## Web
+- [x] Trang MCP Server detail hiển thị 3 meta-tools với usage examples
+- [x] Tab "Connect" hiển thị endpoint URL + config snippets (Cursor, Claude Code, Antigravity)
+- [x] Hướng dẫn authentication (API Key recommended, JWT fallback)

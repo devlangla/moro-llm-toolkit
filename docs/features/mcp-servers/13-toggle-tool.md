@@ -5,13 +5,12 @@
     <group>MCP Servers</group>
     <status>planned</status>
     <priority>p1</priority>
-    <updated>2026-05-05</updated>
   </meta>
 
   <overview>
-    User có thể bật/tắt (enable/disable) một tool mà không cần xoá.
-    Tool inactive sẽ không được expose cho AI agents khi chúng list tools
-    qua MCP protocol.
+       User có thể bật/tắt (enable/disable) một tool mà không cần xoá. Tool
+    inactive sẽ không được expose cho AI agents khi chúng list tools qua MCP
+    protocol.
   </overview>
 
   <user-stories>
@@ -21,13 +20,14 @@
       <benefit>tạm ẩn tool mà không mất code/config</benefit>
     </story>
   </user-stories>
-
-  <acceptance-criteria>
-    <criterion id="AC-01">Toggle switch trên mỗi tool row trong danh sách tools.</criterion>
-    <criterion id="AC-02">Toggle → gọi API cập nhật isActive → UI phản ánh ngay (optimistic update).</criterion>
-    <criterion id="AC-03">Tool inactive → không xuất hiện trong MCP tools/list response.</criterion>
-    <criterion id="AC-04">Tool inactive vẫn hiển thị trên UI với style mờ (dimmed) + badge "Inactive".</criterion>
-    <criterion id="AC-05">API: PATCH /api/mcp-servers/:serverId/tools/:toolId → { isActive: boolean }.</criterion>
-    <criterion id="AC-06">System tools (builtin) cũng có thể toggle — cho phép admin disable system tool nếu muốn.</criterion>
-  </acceptance-criteria>
 </feature>
+
+## Server
+- [ ] Toggle → gọi API cập nhật isActive → UI phản ánh ngay (optimistic update).
+- [ ] Tool inactive → không xuất hiện trong MCP tools/list response.
+- [ ] API: PATCH /api/mcp-servers/:serverId/tools/:toolId → { isActive: boolean }.
+
+## Web
+- [ ] Toggle switch trên mỗi tool row trong danh sách tools.
+- [ ] Tool inactive vẫn hiển thị trên UI với style mờ (dimmed) + badge "Inactive".
+- [ ] System tools (builtin) cũng có thể toggle — cho phép admin disable system tool nếu muốn.

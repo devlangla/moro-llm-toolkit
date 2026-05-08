@@ -3,14 +3,15 @@
     <id>dynamic_api_edit</id>
     <title>Chỉnh sửa API endpoint</title>
     <group>Dynamic API</group>
-    <status>planned</status>
+    <status>done</status>
     <priority>p0</priority>
-    <updated>2026-04-28</updated>
   </meta>
 
   <overview>
-    User chỉnh sửa thông tin và code của API endpoint. Thay đổi có hiệu lực
-    ngay lập tức (hot-reload), không cần restart.
+       User chỉnh sửa thông tin, code, và dependencies của API endpoint. Thay
+    đổi code có hiệu lực ngay lập tức — warm instance được invalidate và
+    rebuild. Nếu dependencies thay đổi, hệ thống tự chạy `bun install` lại cho
+    endpoint đó.
   </overview>
 
   <user-stories>
@@ -20,13 +21,15 @@
       <benefit>cập nhật logic xử lý API tại runtime</benefit>
     </story>
   </user-stories>
-
-  <acceptance-criteria>
-    <criterion id="AC-01">Click API row → mở editor page/dialog.</criterion>
-    <criterion id="AC-02">Chỉnh sửa được: Name, Method, Path, Description, Code.</criterion>
-    <criterion id="AC-03">Code editor (Monaco) với Python syntax highlight, autocomplete.</criterion>
-    <criterion id="AC-04">Save (Ctrl+S) → code cập nhật trong DB, có hiệu lực ngay request tiếp theo.</criterion>
-    <criterion id="AC-05">Dirty check: cảnh báo nếu rời trang khi có thay đổi chưa save.</criterion>
-    <criterion id="AC-06">API: PATCH /api/dynamic-apis/:id.</criterion>
-  </acceptance-criteria>
 </feature>
+
+## Server
+- [x] Click API row → mở editor page/dialog.
+- [x] Save (Ctrl+S) → code cập nhật trong DB, warm instance invalidated, có hiệu lực ngay request tiếp theo.
+- [x] Nếu dependencies thay đổi → hệ thống chạy `bun install --cwd data/dynamic-apis/{id}/` → cập nhật node_modules riêng.
+- [x] API: PATCH /api/dynamic-apis/:id.
+
+## Web
+- [x] Chỉnh sửa được: Name, Method, Path, Description, Code, Dependencies.
+- [x] Code editor (Monaco) với JavaScript/TypeScript syntax highlight, autocomplete.
+- [x] Dirty check: cảnh báo nếu rời trang khi có thay đổi chưa save.

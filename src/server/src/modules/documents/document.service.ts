@@ -13,6 +13,7 @@ function formatDoc(row: typeof documents.$inferSelect) {
   return {
     id: row.id,
     projectId: row.projectId,
+    parentId: row.parentId,
     title: row.title,
     icon: row.icon,
     cover: row.cover,
@@ -39,6 +40,7 @@ export async function listDocuments(projectId: string) {
   return rows.map((r) => ({
     id: r.id,
     projectId: r.projectId,
+    parentId: r.parentId,
     title: r.title,
     icon: r.icon,
     order: r.order,
@@ -75,11 +77,16 @@ export async function createDocument(projectId: string, data: CreateDocumentBody
   const id = genId("doc");
   const ts = now();
 
-  // Calculate order: place at the end
+  // Calculate order: place at the end (among siblings with same parentId)
+  const parentId = data.parentId ?? null;
+  const conditions = parentId
+    ? and(eq(documents.projectId, projectId), eq(documents.parentId, parentId))
+    : and(eq(documents.projectId, projectId), sql`${documents.parentId} IS NULL`);
+
   const siblings = await db
     .select({ order: documents.order })
     .from(documents)
-    .where(eq(documents.projectId, projectId))
+    .where(conditions)
     .orderBy(desc(documents.order))
     .limit(1)
     .all();
@@ -89,6 +96,7 @@ export async function createDocument(projectId: string, data: CreateDocumentBody
   await db.insert(documents).values({
     id,
     projectId,
+    parentId,
     title: data.title ?? "Untitled",
     icon: data.icon ?? null,
     content: data.content ?? "",
@@ -110,6 +118,7 @@ export async function updateDocument(projectId: string, id: string, data: Update
   if (data.icon !== undefined) updates.icon = data.icon;
   if (data.cover !== undefined) updates.cover = data.cover;
   if (data.content !== undefined) updates.content = data.content;
+  if (data.parentId !== undefined) updates.parentId = data.parentId;
 
   await db
     .update(documents)
@@ -121,10 +130,28 @@ export async function updateDocument(projectId: string, id: string, data: Update
 
 export async function deleteDocument(projectId: string, id: string) {
   const db = getDb();
+  // Cascade delete: recursively delete all children
+  await deleteDocumentChildren(db, projectId, id);
   await db
     .delete(documents)
     .where(and(eq(documents.id, id), eq(documents.projectId, projectId)));
   return true;
+}
+
+/** Recursively delete all children of a document */
+async function deleteDocumentChildren(db: ReturnType<typeof getDb>, projectId: string, parentId: string) {
+  const children = await db
+    .select({ id: documents.id })
+    .from(documents)
+    .where(and(eq(documents.parentId, parentId), eq(documents.projectId, projectId)))
+    .all();
+
+  for (const child of children) {
+    await deleteDocumentChildren(db, projectId, child.id);
+    await db
+      .delete(documents)
+      .where(eq(documents.id, child.id));
+  }
 }
 
 // ── Search ──────────────────────────────────────────────────────────────────────

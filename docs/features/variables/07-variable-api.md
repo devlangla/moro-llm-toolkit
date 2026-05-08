@@ -3,18 +3,14 @@
     <id>variable_api</id>
     <title>API CRUD cho variables</title>
     <group>Dynamic Variables</group>
-    <status>planned</status>
+    <status>done</status>
     <priority>p0</priority>
-    <updated>2026-04-28</updated>
   </meta>
 
   <overview>
     RESTful API đầy đủ cho CRUD operations trên variable namespaces và variables.
-    Namespaces là entity cấp cao nhất, variables là nested resource.
-    API này được sử dụng bởi cả frontend UI, MCP tools, và Dynamic APIs.
-
-    Base URL namespaces: /api/variable-namespaces
-    Base URL variables: /api/variable-namespaces/:namespaceId/variables
+    API này được sử dụng bởi frontend UI, MCP tools, và Dynamic APIs.
+    Base: /api/variable-namespaces, /api/variable-namespaces/:namespaceId/variables
   </overview>
 
   <user-stories>
@@ -24,17 +20,16 @@
       <benefit>tương tác với key-value store qua HTTP</benefit>
     </story>
   </user-stories>
-
-  <acceptance-criteria>
-    <criterion id="AC-01">Namespace CRUD: GET /api/variable-namespaces (list), POST /api/variable-namespaces (create), GET /api/variable-namespaces/:namespaceId, PATCH /api/variable-namespaces/:namespaceId, DELETE /api/variable-namespaces/:namespaceId.</criterion>
-    <criterion id="AC-02">GET /api/variable-namespaces/:namespaceId/variables — list variables (query: search, sort, order, page, limit). Tự động lọc expired.</criterion>
-    <criterion id="AC-03">GET /api/variable-namespaces/:namespaceId/variables/by-key/:key — get variable by key (trả 404 nếu expired).</criterion>
-    <criterion id="AC-04">GET /api/variable-namespaces/:namespaceId/variables/:id — get variable by ID.</criterion>
-    <criterion id="AC-05">POST /api/variable-namespaces/:namespaceId/variables — create/upsert variable { key, value, type?, ttl? }.</criterion>
-    <criterion id="AC-06">POST /api/variable-namespaces/:namespaceId/variables/bulk — batch create/upsert nhiều variables { variables: [...] }.</criterion>
-    <criterion id="AC-07">PATCH /api/variable-namespaces/:namespaceId/variables/:id — update variable { value?, type?, ttl? }.</criterion>
-    <criterion id="AC-08">DELETE /api/variable-namespaces/:namespaceId/variables/:id — delete single variable.</criterion>
-    <criterion id="AC-09">DELETE /api/variable-namespaces/:namespaceId/variables — flush all variables in namespace.</criterion>
-    <criterion id="AC-10">Tất cả endpoints yêu cầu authentication (JWT hoặc API key).</criterion>
-  </acceptance-criteria>
 </feature>
+
+## Server
+- [x] Namespace CRUD: GET (list), POST (create), GET /:id, PATCH /:id, DELETE /:id
+- [x] GET /api/variable-namespaces/:namespaceId/variables — list (query: search, sort, order, page, limit), auto-filter expired
+- [x] GET .../variables/by-key/:key — get by key (404 nếu expired)
+- [x] GET .../variables/:id — get by ID
+- [x] POST .../variables { key, value, type?, ttl? } — create/upsert
+- [x] POST .../variables/bulk { variables: [...] } — batch create/upsert
+- [x] PATCH .../variables/:id { value?, type?, ttl? } — update
+- [x] DELETE .../variables/:id — delete single
+- [x] DELETE .../variables — flush all in namespace
+- [x] Tất cả endpoints yêu cầu auth (JWT hoặc API key)

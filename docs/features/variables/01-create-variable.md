@@ -3,9 +3,8 @@
     <id>variable_create</id>
     <title>Tạo variable</title>
     <group>Dynamic Variables</group>
-    <status>planned</status>
+    <status>done</status>
     <priority>p0</priority>
-    <updated>2026-04-28</updated>
   </meta>
 
   <overview>
@@ -20,13 +19,17 @@
       <benefit>lưu trữ dữ liệu key-value để agents hoặc APIs sử dụng</benefit>
     </story>
   </user-stories>
-
-  <acceptance-criteria>
-    <criterion id="AC-01">Nút "Add Variable" trên trang Variable browser.</criterion>
-    <criterion id="AC-02">Click → dialog/inline form: Key (bắt buộc), Value (bắt buộc), Type (auto-detect hoặc chọn: string/number/boolean/json), TTL (optional, seconds, 0 = không hết hạn). Variable được tạo trong namespace hiện tại.</criterion>
-    <criterion id="AC-03">Key chỉ chứa alphanumeric, dấu gạch ngang, gạch dưới, dấu chấm. Tối đa 255 ký tự.</criterion>
-    <criterion id="AC-04">Key phải unique trong cùng namespace.</criterion>
-    <criterion id="AC-05">Save → variable xuất hiện trong danh sách.</criterion>
-    <criterion id="AC-06">API: POST /api/variable-namespaces/:namespaceId/variables → { key, value, type?, ttl? }. Nếu key đã tồn tại trong namespace → upsert (update value).</criterion>
-  </acceptance-criteria>
 </feature>
+
+## Server
+- [x] POST /api/variable-namespaces/:namespaceId/variables { key, value, type?, ttl? } → tạo variable
+- [x] Key unique trong namespace — nếu key đã tồn tại → upsert (update value)
+- [x] Key chỉ chứa alphanumeric, gạch ngang, gạch dưới, dấu chấm, tối đa 255 ký tự
+- [x] Auto-detect type nếu không truyền: "123" → number, "true"/"false" → boolean, "{...}" → json
+- [x] TTL = 0 hoặc null → persistent (không hết hạn)
+
+## Web
+- [x] Nút "Add Variable" trên trang Variable browser
+- [x] Click → dialog: Key (bắt buộc), Value (bắt buộc), Type (auto-detect hoặc chọn), TTL (optional, seconds)
+- [x] Save → variable xuất hiện trong danh sách
+- [x] Variable được tạo trong namespace đang chọn

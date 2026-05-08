@@ -373,12 +373,16 @@ export default function StoragePage() {
       label: "Download",
       onClick: () => handleDownload(obj),
     },
-    {
-      key: "copy-url",
-      icon: <Copy size={14} />,
-      label: "Copy Public URL",
-      onClick: () => handleCopyUrl(obj),
-    },
+    ...(obj.isPublic
+      ? [
+          {
+            key: "copy-url",
+            icon: <Copy size={14} />,
+            label: "Copy Public URL",
+            onClick: () => handleCopyUrl(obj),
+          },
+        ]
+      : []),
     {
       key: "presign",
       icon: <Link size={14} />,

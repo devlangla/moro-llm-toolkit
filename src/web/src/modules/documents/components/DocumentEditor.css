@@ -1,11 +1,52 @@
 /* ══════════════════════════════════════════════════════════════════════════════
-   MARKDOWN PREVIEW (nested element selectors — must stay as CSS)
+   DOCUMENT EDITOR STYLES
    ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Monaco Wrapper ──────────────────────────────────────────────────────────── */
+
+.doc-monaco-wrapper {
+  position: relative;
+  background: #fafaf7;
+  border-radius: 8px;
+}
+
+/* Placeholder text overlay */
+.doc-editor-placeholder {
+  position: absolute;
+  top: 16px;
+  left: 24px;
+  color: #cfcdc4;
+  font-size: 15px;
+  line-height: 1.7;
+  font-family: 'Inter', 'SF Pro Text', system-ui, sans-serif;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.doc-monaco-wrapper .monaco-editor .margin {
+  background: transparent !important;
+}
+
+.doc-monaco-wrapper .monaco-editor .overflow-guard {
+  border-radius: 8px;
+}
+
+/* Let the editor content fill the area naturally */
+.doc-monaco-wrapper .monaco-editor .lines-content {
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+.doc-monaco-wrapper .monaco-editor .view-line {
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+/* ── MARKDOWN PREVIEW (nested element selectors — must stay as CSS) ────────── */
 
 .doc-markdown-preview {
   font-size: 15px;
   line-height: 1.7;
-  color: var(--color-body);
+  color: var(--color-ink);
   word-wrap: break-word;
 }
 
@@ -22,7 +63,7 @@
 }
 
 .doc-markdown-preview h1 { font-size: 28px; font-weight: 500; letter-spacing: -0.5px; }
-.doc-markdown-preview h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.3px; border-bottom: 1px solid var(--color-hairline-soft); padding-bottom: 0.3em; }
+.doc-markdown-preview h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.3px; padding-bottom: 0.3em; }
 .doc-markdown-preview h3 { font-size: 18px; font-weight: 600; }
 .doc-markdown-preview h4 { font-size: 15px; font-weight: 600; }
 

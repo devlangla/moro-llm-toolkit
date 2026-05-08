@@ -2,11 +2,11 @@
 
 **Self-hosted infrastructure toolkit for LLM agents and AI applications.**
 
-Moro LLM Toolkit is a self-hosted toolkit that provides all the primitives LLM agents need to operate: state storage, knowledge base, tool execution, file storage, and dynamic APIs — packaged in a single server with a built-in Web UI.
+Moro LLM Toolkit provides all the building blocks LLM agents need to operate — state storage, structured data, knowledge base, file storage, tool execution, and dynamic APIs — packaged in a single server with a built-in Web UI.
 
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Runtime](https://img.shields.io/badge/runtime-Bun-%23f472b6)
-![Version](https://img.shields.io/npm/v/moro-llm-toolkit)
+![Version](https://img.shields.io/badge/version-0.2.5-green)
 
 ---
 
@@ -15,11 +15,11 @@ Moro LLM Toolkit is a self-hosted toolkit that provides all the primitives LLM a
 When building LLM agents and AI pipelines, you typically need:
 
 - **State storage** — agents need to read/write runtime variables across runs
-- **Structured data storage** — tables with custom columns, sort/filter like Notion
-- **Document storage** — knowledge base with a block editor for agent retrieval
-- **File storage** — object storage for documents, images, artifacts
-- **Agent tools** — Python tools running in a sandbox, exposed via MCP protocol
-- **Custom HTTP endpoints** — dynamic APIs written in Python at runtime
+- **Structured data** — tables with custom columns, sort/filter like Notion databases
+- **Knowledge base** — documents with a Markdown editor for agent retrieval
+- **File storage** — self-hosted object storage for documents, images, artifacts
+- **Agent tools** — system tools exposed via MCP protocol for AI clients
+- **Custom HTTP endpoints** — dynamic APIs written in JS/TS, created at runtime
 
 Instead of integrating multiple separate services (Redis, Notion, S3, custom tool server...), Moro LLM Toolkit bundles everything into **a single self-hosted server**.
 
@@ -27,15 +27,26 @@ Instead of integrating multiple separate services (Redis, Notion, S3, custom too
 
 ## Features
 
-| Module | Description |
-|---|---|
-| 👤 **User Management** | Authentication, RBAC, session management, API key management |
-| 🔑 **Dynamic Variables** | Redis-like key-value store with data types, TTL, namespaces |
-| 📊 **Dynamic Table** | Notion-style database with custom columns, sort/filter, multiple views |
-| 📝 **Documents** | Block-based document editor (Notion-style), organized into Projects |
-| 📦 **Storage** | Self-hosted S3-compatible object storage: buckets, upload/download, presigned URLs |
-| 🔌 **MCP Servers** | Manage Model Context Protocol servers + Python tools running in a sandbox |
-| ⚡ **Dynamic API** | Create HTTP API endpoints at runtime using Python code |
+### ✅ Implemented
+
+| Module | Description | Status |
+|---|---|---|
+| 👤 **User Management** | Authentication, RBAC (superadmin/admin/user), session management, API keys | ✅ Done |
+| 🔑 **Dynamic Variables** | Redis-like key-value store with data types, TTL, namespaces | ✅ Done |
+| 📊 **Dynamic Tables** | Notion-style databases with custom columns, sort/filter, row CRUD | ✅ Done |
+| 📝 **Documents** | Markdown editor (Monaco), document tree, nested pages, organized into Projects | ✅ Done |
+| 📦 **Storage** | Self-hosted S3-compatible object storage: buckets, upload/download, presigned URLs, access keys | ✅ Done |
+| 🔌 **Built-in MCP Server** | System MCP server exposing Variables, Tables, Documents, Storage as tools for AI agents | ✅ Done |
+| ⚡ **Dynamic API** | Create HTTP API endpoints at runtime using JS/TS code on Bun runtime | ✅ Done |
+
+### 🚧 In Progress / Planned
+
+| Module | Description | Status |
+|---|---|---|
+| 🔌 **Custom MCP Servers** | User-defined MCP servers with custom Python tools in sandbox | ⬜ Planned |
+| 📊 **Table Views** | Multiple views (Table/Board/List) for Dynamic Tables | ⬜ Planned |
+| 📊 **Row Detail Dialog** | Detailed row view in Dynamic Tables | ⬜ Planned |
+| 📝 **Document Icon & Cover** | Custom icons and cover images for Documents | ⬜ Planned |
 
 ---
 
@@ -101,7 +112,7 @@ moro-llm-toolkit <command> [options]
 **`logs`:**
 
 | Flag                | Default | Description                     |
-|---------------------|---------|--------------------------------|
+|---------------------|---------|---------------------------------|
 | `--lines <number>`  | `50`    | Number of log lines to display |
 | `--follow`          | —       | Tail logs continuously         |
 
@@ -140,33 +151,7 @@ On first startup when no accounts exist, the server automatically creates a defa
 | Password | `admin123`        |
 
 > [!WARNING]
-> **Change the password immediately after the first login!** The default account has super admin privileges and a very simple password.
-
-### How to Change the Password
-
-**Via Web UI:**
-
-1. Open `http://localhost:18080` and log in with the default credentials above
-2. Click on the avatar/account name in the top right corner
-3. Select **Profile** or **Account Settings**
-4. Enter the old password (`admin123`) and the new password
-5. Save
-
-**Via API:**
-
-```bash
-# 1. Log in to get a token
-TOKEN=$(curl -s -X POST http://localhost:18080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"login":"admin","password":"admin123"}' \
-  | jq -r '.token')
-
-# 2. Change the password
-curl -X POST http://localhost:18080/api/auth/change-password \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"old_password":"admin123","new_password":"your-new-secure-password"}'
-```
+> **Change the password immediately after the first login!** The default account has super admin privileges.
 
 ---
 
@@ -176,7 +161,7 @@ All data is stored in the data directory (`~/.moro-llm-toolkit` by default):
 
 ```
 ~/.moro-llm-toolkit/
-├── data.db       # SQLite database (users, variables, tables, MCP configs...)
+├── data.db       # SQLite database (users, variables, tables, documents, configs...)
 ├── agent.pid     # PID file (daemon mode)
 ├── agent.log     # Server logs (daemon mode)
 └── storage/      # Object storage files (buckets & objects)
@@ -186,7 +171,7 @@ All data is stored in the data directory (`~/.moro-llm-toolkit` by default):
 
 ## REST API
 
-The server exposes a REST API at `http://localhost:18080/api`. Full API documentation is available at:
+The server exposes a REST API at `http://localhost:18080/api`. Full interactive API documentation is available at:
 
 ```
 http://localhost:18080/docs
@@ -201,23 +186,31 @@ All API endpoints require authentication via one of two methods:
 Authorization: Bearer <token>
 ```
 
-**API Key**:
+**API Key** (recommended for agents):
 ```http
-X-API-Key: <api-key>
+X-API-Key: ltk_xxxxxxxxxxxx
 ```
 
-### Main Endpoint Groups
+### API Endpoint Groups
 
 | Prefix | Description |
 |---|---|
-| `POST /api/auth/login` | Log in, get token |
-| `GET /api/users` | User management |
-| `GET /api/variables` | Dynamic Variables CRUD |
-| `GET /api/databases` | Dynamic Tables CRUD |
-| `GET /api/documents` | Documents & Projects CRUD |
-| `GET /api/storage` | Object Storage (buckets, objects) |
-| `GET /api/mcp-tool-servers` | MCP Server management |
-| `GET /api/api-keys` | API Key management |
+| `POST /api/auth/login` | Authenticate, get JWT token |
+| `/api/users` | User management (admin+) |
+| `/api/api-keys` | API Key management (admin+) |
+| `/api/variable-namespaces` | Variable namespaces CRUD |
+| `/api/variable-namespaces/:nsId/variables` | Variables CRUD (within a namespace) |
+| `/api/databases` | Database containers CRUD |
+| `/api/databases/:dbId/tables` | Tables, columns, rows CRUD |
+| `/api/projects` | Document projects CRUD |
+| `/api/projects/:projectId/documents` | Documents CRUD (within a project) |
+| `/api/storage/buckets` | Bucket management |
+| `/api/storage/buckets/:name/objects` | Object upload/download/delete |
+| `/api/storage/buckets/:name/presigned` | Generate presigned URLs |
+| `/api/mcp/:serverId` | MCP server endpoint (Streamable HTTP) |
+| `/api/dynamic-apis` | Dynamic API endpoint management |
+| `/apis/*` | Dynamic API request routing |
+| `/s3/` | S3-compatible API (AWS SDK compatible) |
 
 > See detailed request/response schemas at `/docs` while the server is running.
 
@@ -225,60 +218,124 @@ X-API-Key: <api-key>
 
 ## Integration with LLM Agents
 
-### Dynamic Variables — Agent State Storage
+### 🔑 Dynamic Variables — Agent State Storage
 
-Agents can read/write state via the Variables API:
+Agents can persist and read state via the Variables API. Variables are organized into **namespaces**.
 
 ```javascript
-// Write state
-await fetch('http://localhost:18080/api/variables', {
+// Create a namespace
+const ns = await fetch('http://localhost:18080/api/variable-namespaces', {
   method: 'POST',
-  headers: { 'X-API-Key': 'your-key', 'Content-Type': 'application/json' },
+  headers: { 'X-API-Key': 'ltk_your-key', 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: 'agent-session-123', description: 'Session state' })
+}).then(r => r.json());
+
+// Write a variable (with optional TTL)
+await fetch(`http://localhost:18080/api/variable-namespaces/${ns.id}/variables`, {
+  method: 'POST',
+  headers: { 'X-API-Key': 'ltk_your-key', 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    namespace: 'agent:session-123',
     key: 'current_step',
     value: '3',
     type: 'string',
-    ttl: 3600  // Auto-delete after 1 hour
+    ttl: 3600  // auto-delete after 1 hour
   })
 });
 
-// Read state
-const res = await fetch('http://localhost:18080/api/variables/agent:session-123/current_step', {
-  headers: { 'X-API-Key': 'your-key' }
-});
+// Read a variable by key
+const variable = await fetch(
+  `http://localhost:18080/api/variable-namespaces/${ns.id}/variables/by-key/current_step`,
+  { headers: { 'X-API-Key': 'ltk_your-key' } }
+).then(r => r.json());
 ```
 
-### MCP Servers — Tools for Agents
+### 🔌 Built-in MCP Server — Tools for AI Agents
 
-Connect your LLM client (Claude, Cursor, Cline...) to the MCP endpoint:
+The built-in MCP server exposes the entire system to AI agents via 3 meta-tools:
+
+| Tool | Description |
+|---|---|
+| `get_overview` | List all available actions across all modules |
+| `get_docs` | Get detailed documentation for a specific action |
+| `execute` | Execute any action with a payload |
+
+**Available actions:**
+
+- **Variables**: `variables.list`, `variables.get`, `variables.set`, `variables.delete`
+- **Variable Namespaces**: `variable_namespaces.list`, `variable_namespaces.create`, `variable_namespaces.update`, `variable_namespaces.delete`
+- **Databases & Tables**: `databases.list`, `tables.list`, `tables.query`, `tables.insert`, `tables.update`, `tables.delete`
+- **Documents**: `projects.list`, `documents.list`, `documents.get`, `documents.create`, `documents.update`
+- **Storage**: `storage.list_buckets`, `storage.list_objects`, `storage.get_object_info`, `storage.get_download_url`, `storage.delete_object`
+
+**Connect your AI client** to:
 
 ```
-http://localhost:18080/api/mcp-tool-servers/<server-id>/mcp
+http://localhost:18080/api/mcp/<server-id>
 ```
 
-The built-in system server exposes integrated tools (read variables, query tables...). Custom servers allow you to write custom Python tools:
+**Configuration examples:**
 
-```python
-# Example Python tool in Moro MCP Server
-def search_knowledge_base(query: str) -> str:
-    """Search the knowledge base"""
-    # Tool code runs in a sandbox
-    results = db.query(query)
-    return json.dumps(results)
+<details>
+<summary>Claude Code</summary>
+
+```json
+{
+  "mcpServers": {
+    "moro-toolkit": {
+      "type": "streamableHttp",
+      "url": "http://localhost:18080/api/mcp/<server-id>",
+      "headers": {
+        "Authorization": "Bearer ltk_your-api-key"
+      }
+    }
+  }
+}
+```
+</details>
+
+<details>
+<summary>Cursor</summary>
+
+```json
+{
+  "mcpServers": {
+    "moro-toolkit": {
+      "url": "http://localhost:18080/api/mcp/<server-id>",
+      "headers": {
+        "Authorization": "Bearer ltk_your-api-key"
+      }
+    }
+  }
+}
+```
+</details>
+
+### ⚡ Dynamic API — Custom HTTP Endpoints
+
+Create HTTP endpoints at runtime using JavaScript/TypeScript. Code runs on Bun runtime with Cloudflare Workers-inspired architecture:
+
+- **Warm instances** — handlers cached in memory, ~1-5ms cold start
+- **Bindings** — access internal services (Variables, Tables, Docs, Files) via injected `context`
+- **Console capture** — all `console.log/error` captured and stored as logs
+- **npm dependencies** — endpoints can use external npm packages (isolated mode, ~20-50ms cold start)
+
+Dynamic API endpoints are accessible at `/apis/*`:
+
+```
+POST http://localhost:18080/apis/my-endpoint
 ```
 
-### Dynamic API — Custom HTTP Endpoints
+### 📦 Storage — S3-Compatible Object Storage
 
-Create HTTP endpoints at runtime without redeploying:
+Use the REST API or any S3-compatible client/SDK:
 
-```python
-# Endpoint code (Python, sandboxed)
-def handle(request):
-    data = request.json()
-    # Custom processing logic
-    return {"result": process(data)}
+```bash
+# Using AWS CLI with Moro Storage
+aws s3 ls --endpoint-url http://localhost:18080/s3 \
+  --region us-east-1
 ```
+
+Features: buckets, upload/download, public URLs, presigned URLs (time-limited), access key management.
 
 ---
 
@@ -288,10 +345,14 @@ def handle(request):
 |---|---|
 | **Runtime** | [Bun](https://bun.sh/) ≥ 1.2 |
 | **Server** | [Fastify](https://fastify.dev/) + fastify-type-provider-zod |
-| **Frontend** | React 19 + TypeScript + Vite + Tailwind CSS |
-| **Database** | SQLite (`bun:sqlite`) + Drizzle ORM |
-| **Validation** | Zod |
-| **AI SDK** | Vercel AI SDK (`ai`, `@ai-sdk/*`) |
+| **Database** | SQLite (`bun:sqlite`) + [Drizzle ORM](https://orm.drizzle.team/) |
+| **Validation** | [Zod](https://zod.dev/) |
+| **MCP** | [@modelcontextprotocol/sdk](https://github.com/modelcontextprotocol/typescript-sdk) |
+| **Frontend** | React 19 + TypeScript + [Vite](https://vite.dev/) |
+| **UI Components** | [Ant Design](https://ant.design/) v6 + [Tailwind CSS](https://tailwindcss.com/) v4 |
+| **Data Grid** | [AG Grid](https://www.ag-grid.com/) |
+| **Code Editor** | [Monaco Editor](https://microsoft.github.io/monaco-editor/) |
+| **State Management** | [Zustand](https://zustand.docs.pmnd.rs/) |
 
 ---
 
@@ -324,25 +385,28 @@ moro-llm-toolkit/
 │   ├── server/                    # Fastify API server
 │   │   └── src/
 │   │       ├── modules/           # Feature modules (auto-loaded)
-│   │       │   ├── auth/          # Authentication
+│   │       │   ├── auth/          # Authentication (login/logout)
 │   │       │   ├── users/         # User management
-│   │       │   ├── variables/     # Dynamic variables
-│   │       │   ├── databases/     # Dynamic tables
+│   │       │   ├── api-keys/      # API key management
+│   │       │   ├── variables/     # Dynamic variables + namespaces
+│   │       │   ├── databases/     # Dynamic tables (databases/tables/columns/rows)
 │   │       │   ├── documents/     # Documents & projects
-│   │       │   ├── storage/       # Object storage
+│   │       │   ├── storage/       # Object storage (buckets/objects)
 │   │       │   ├── s3/            # S3-compatible API layer
 │   │       │   ├── mcp-tool-servers/ # MCP server management
-│   │       │   ├── api-keys/      # API key management
+│   │       │   ├── dynamic-apis/  # Dynamic API endpoints
+│   │       │   ├── system/        # System info
 │   │       │   └── api-docs/      # API documentation endpoint
 │   │       └── common/            # Shared infrastructure
 │   │           ├── db/            # Drizzle ORM schema & migrations
-│   │           ├── auth/          # Auth middleware
-│   │           ├── mcp/           # MCP protocol shared logic
+│   │           ├── auth/          # Auth middleware (JWT + API key)
+│   │           ├── mcp/           # MCP protocol + action registry
 │   │           └── utils/         # Utility functions
 │   └── web/                       # React frontend (Vite)
+│       └── src/
+│           └── modules/           # Feature modules (mirror of server)
 ├── bin/                           # CLI entry point
-├── docs/                          # Feature documentation
-│   └── features/                  # Per-feature specs
+├── docs/                          # Feature documentation & specs
 ├── docker/                        # Docker configs
 └── public/                        # Bundled web assets (production)
 ```
@@ -366,14 +430,16 @@ Modules are auto-loaded — no need to modify `app.ts`.
 ## Docker
 
 ```bash
-# Build image
-docker build -t moro-llm-toolkit -f docker/Dockerfile .
+# Using docker-compose (recommended)
+cd docker
+docker compose up -d
 
-# Run with a volume mount for data
+# Or build manually
+docker build -t moro-llm-toolkit -f docker/Dockerfile .
 docker run -d \
   -p 18080:18080 \
-  -v ~/.moro-data:/data \
-  -e MORO_DATA_DIR=/data \
+  -v ./data:/data \
+  -e DATA_DIR=/data \
   moro-llm-toolkit
 ```
 

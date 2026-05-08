@@ -3,9 +3,8 @@
     <id>variable_edit</id>
     <title>Chỉnh sửa variable</title>
     <group>Dynamic Variables</group>
-    <status>planned</status>
+    <status>done</status>
     <priority>p0</priority>
-    <updated>2026-04-28</updated>
   </meta>
 
   <overview>
@@ -20,13 +19,16 @@
       <benefit>cập nhật giá trị runtime mà không cần xoá tạo lại</benefit>
     </story>
   </user-stories>
-
-  <acceptance-criteria>
-    <criterion id="AC-01">Click variable row → inline edit hoặc dialog chỉnh sửa.</criterion>
-    <criterion id="AC-02">Chỉnh sửa được: Value, Type, TTL.</criterion>
-    <criterion id="AC-03">Key hiển thị read-only (không đổi được).</criterion>
-    <criterion id="AC-04">Value editor thay đổi theo type: text input (string), number input (number), toggle (boolean), JSON editor (json).</criterion>
-    <criterion id="AC-05">Save → cập nhật ngay, reset TTL countdown nếu TTL thay đổi.</criterion>
-    <criterion id="AC-06">API: PATCH /api/variable-namespaces/:namespaceId/variables/:id → { value?, type?, ttl? }.</criterion>
-  </acceptance-criteria>
 </feature>
+
+## Server
+- [x] PATCH /api/variable-namespaces/:namespaceId/variables/:id { value?, type?, ttl? }
+- [x] Key hiển thị read-only, không thể sửa
+- [x] Reset TTL countdown nếu TTL thay đổi
+
+## Web
+- [x] Click variable row → inline edit hoặc dialog chỉnh sửa
+- [x] Chỉnh sửa được: Value, Type, TTL
+- [x] Key hiển thị read-only
+- [x] Value editor thay đổi theo type: text input (string), number input (number), toggle (boolean), JSON editor (json)
+- [x] Save → cập nhật ngay trong danh sách

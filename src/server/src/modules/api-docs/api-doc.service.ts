@@ -940,6 +940,120 @@ console.log(result.success, result.result);`,
       },
     ],
   },
+  {
+    id: "dynamic-apis",
+    label: "Dynamic APIs",
+    description: "Create and manage HTTP API endpoints at runtime. Endpoints execute JS/TS code on Bun runtime.",
+    basePrefix: "/api/dynamic-apis",
+    endpoints: [
+      {
+        method: "GET",
+        path: "/",
+        summary: "List all dynamic API endpoints",
+        auth: "both",
+        queryParams: "search, method (GET|POST|PUT|PATCH|DELETE), status (active|inactive), page, limit",
+        response: `{
+  "items": [{
+    "id": "dap_xxx",
+    "name": "Get Users",
+    "method": "GET",
+    "path": "/users",
+    "isActive": true
+  }],
+  "meta": { "total": 1, "page": 1, "limit": 50, "hasMore": false }
+}`,
+        jsExample: `const result = await client.dynamicApis.list({ search: "user" });
+result.items.forEach(api => console.log(api.method, api.path));`,
+      },
+      {
+        method: "POST",
+        path: "/",
+        summary: "Create a new dynamic API endpoint",
+        auth: "both",
+        body: `{
+  "name": "Get Users",
+  "method": "GET",
+  "path": "/users",
+  "code": "async function handler(request, context) {\\n  return { status: 200, body: { users: [] } };\\n}",
+  "dependencies": { "lodash": "^4.17.21" }
+}`,
+        notes: "When dependencies is set with npm packages, the handler runs in isolated mode (Bun subprocess with per-endpoint node_modules).",
+        jsExample: `const api = await client.dynamicApis.create({
+  name: "Get Users",
+  method: "GET",
+  path: "/users",
+  dependencies: { "lodash": "^4.17.21" }
+});`,
+      },
+      {
+        method: "GET",
+        path: "/:id",
+        summary: "Get dynamic API by ID",
+        auth: "both",
+        jsExample: `const api = await client.dynamicApis.get("dap_xxx");`,
+      },
+      {
+        method: "PATCH",
+        path: "/:id",
+        summary: "Update dynamic API (code, config, dependencies, toggle active)",
+        auth: "both",
+        body: `{ "code": "...", "dependencies": { "axios": "^1.7.0" }, "isActive": false }`,
+        notes: "Set dependencies to null to switch back to fast mode (in-process execution).",
+        jsExample: `await client.dynamicApis.update("dap_xxx", {
+  dependencies: { "axios": "^1.7.0" },
+  isActive: false
+});`,
+      },
+      {
+        method: "DELETE",
+        path: "/:id",
+        summary: "Delete dynamic API endpoint",
+        auth: "both",
+        jsExample: `await client.dynamicApis.delete("dap_xxx");`,
+      },
+      {
+        method: "GET",
+        path: "/:id/logs",
+        summary: "List execution logs for an endpoint",
+        auth: "both",
+        queryParams: "status (success|error), startDate (epoch ms), endDate (epoch ms), page, limit",
+        jsExample: `const logs = await client.dynamicApis.listLogs("dap_xxx", {
+  status: "error",
+  startDate: Date.now() - 86400_000, // last 24 hours
+  endDate: Date.now()
+});`,
+      },
+    ],
+  },
+  {
+    id: "dynamic-api-runtime",
+    label: "Dynamic API Runtime",
+    description: "Call your dynamic endpoints. All requests to /apis/* are routed to the matching handler.",
+    basePrefix: "/apis",
+    endpoints: [
+      {
+        method: "GET",
+        path: "/*",
+        summary: "Call a dynamic GET endpoint",
+        auth: "none",
+        notes: "Auth depends on endpoint config (isPublic). Path params extracted automatically (e.g. /users/:id).",
+        jsExample: `// If you created GET /users/:id
+const res = await fetch("{{BASE_URL}}/apis/users/123");
+const data = await res.json();`,
+      },
+      {
+        method: "POST",
+        path: "/*",
+        summary: "Call a dynamic POST endpoint",
+        auth: "none",
+        jsExample: `const res = await fetch("{{BASE_URL}}/apis/orders", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ item: "Widget", qty: 5 })
+});`,
+      },
+    ],
+  },
 ];
 
 /** Return full API docs data */

@@ -3,9 +3,8 @@
     <id>variable_browser</id>
     <title>Variable browser UI</title>
     <group>Dynamic Variables</group>
-    <status>planned</status>
+    <status>done</status>
     <priority>p0</priority>
-    <updated>2026-04-28</updated>
   </meta>
 
   <overview>
@@ -21,16 +20,19 @@
       <benefit>nhìn tổng quan tất cả variables trong hệ thống</benefit>
     </story>
   </user-stories>
-
-  <acceptance-criteria>
-    <criterion id="AC-01">Trang /variables hiển thị danh sách namespaces: Name, Description, Icon, số lượng variables, Updated At. Nút "Add Namespace".</criterion>
-    <criterion id="AC-02">Click namespace → điều hướng tới /variables/namespace/:namespaceId → trang chi tiết hiển thị bảng variables.</criterion>
-    <criterion id="AC-03">Trang variables trong namespace: bảng Key, Value (truncated 100 chars), Type, TTL, Updated At.</criterion>
-    <criterion id="AC-04">Search bar: tìm theo key (debounce 300ms).</criterion>
-    <criterion id="AC-05">Sort theo: key, type, updated_at, TTL.</criterion>
-    <criterion id="AC-06">Click row → expand hiển thị full value (JSON formatted nếu type=json).</criterion>
-    <criterion id="AC-07">Toolbar: Add Variable, Delete selected, Flush namespace.</criterion>
-    <criterion id="AC-08">Badge hiển thị TTL remaining (countdown hoặc "No expiry").</criterion>
-    <criterion id="AC-09">Variables đã hết TTL hiển thị strikethrough hoặc tự động ẩn.</criterion>
-  </acceptance-criteria>
 </feature>
+
+## Server
+- [x] GET /api/variable-namespaces — list namespaces (name, description, variable count)
+- [x] GET /api/variable-namespaces/:namespaceId/variables — list variables (query: search, sort, order, page, limit)
+- [x] Auto-filter expired variables (không trả về variable đã hết TTL)
+
+## Web
+- [x] Trang /variables hiển thị danh sách namespaces: Name, Description, Icon, số lượng variables
+- [x] Click namespace → /variables/namespace/:namespaceId → bảng variables
+- [x] Bảng variables: Key, Value (truncated 100 chars), Type, TTL remaining, Updated At
+- [x] Search bar: tìm theo key (debounce 300ms)
+- [x] Sort theo: key, type, updated_at
+- [x] Click row → expand hiển thị full value (JSON formatted nếu type=json)
+- [x] Badge hiển thị TTL remaining (countdown hoặc "No expiry")
+- [x] Toolbar: Add Variable, Flush namespace

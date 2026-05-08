@@ -170,6 +170,43 @@ export const mcpTools = sqliteTable("mcp_tools", {
   updatedAt: int("updated_at").notNull(),
 });
 
+// ─── Dynamic API Endpoints ─────────────────────────────────────────────────────
+export const dynamicApis = sqliteTable("dynamic_apis", {
+  id: text("id").primaryKey(),              // dap_xxxx
+  name: text("name").notNull(),
+  method: text("method", { enum: ["GET", "POST", "PUT", "PATCH", "DELETE"] })
+    .notNull()
+    .default("GET"),
+  path: text("path").notNull(),              // e.g. /users/:id
+  description: text("description"),
+  code: text("code").notNull().default(""),   // JS/TS source code
+  dependencies: text("dependencies"),         // JSON: { "axios": "^1.7.0" } or null
+  isActive: int("is_active").notNull().default(1),
+  timeout: int("timeout").notNull().default(30000),  // ms
+  isPublic: int("is_public").notNull().default(0),   // 0 = requires auth, 1 = public
+  createdBy: text("created_by").notNull(),
+  createdAt: int("created_at").notNull(),
+  updatedAt: int("updated_at").notNull(),
+});
+
+// ─── Dynamic API Logs ──────────────────────────────────────────────────────────
+export const dynamicApiLogs = sqliteTable("dynamic_api_logs", {
+  id: text("id").primaryKey(),              // dal_xxxx
+  apiId: text("api_id").notNull(),           // FK → dynamic_apis
+  method: text("method").notNull(),
+  path: text("path").notNull(),
+  statusCode: int("status_code").notNull(),
+  executionTimeMs: int("execution_time_ms").notNull(),
+  executionMode: text("execution_mode", { enum: ["fast", "isolated"] }).notNull(),
+  requestHeaders: text("request_headers"),    // JSON
+  requestBody: text("request_body"),          // JSON
+  responseBody: text("response_body"),        // JSON (truncated)
+  consoleOutput: text("console_output"),      // captured console.log/error
+  error: text("error"),                       // error message if any
+  ip: text("ip"),
+  createdAt: int("created_at").notNull(),
+});
+
 // ─── Types ─────────────────────────────────────────────────────────────────────
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -199,4 +236,8 @@ export type McpToolServer = typeof mcpToolServers.$inferSelect;
 export type InsertMcpToolServer = typeof mcpToolServers.$inferInsert;
 export type McpTool = typeof mcpTools.$inferSelect;
 export type InsertMcpTool = typeof mcpTools.$inferInsert;
+export type DynamicApi = typeof dynamicApis.$inferSelect;
+export type InsertDynamicApi = typeof dynamicApis.$inferInsert;
+export type DynamicApiLog = typeof dynamicApiLogs.$inferSelect;
+export type InsertDynamicApiLog = typeof dynamicApiLogs.$inferInsert;
 

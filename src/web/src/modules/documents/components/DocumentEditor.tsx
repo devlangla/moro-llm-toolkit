@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./DocumentEditor.css";
 import { Spin, Typography } from "antd";
-import { Check, AlertCircle, Loader2 } from "lucide-react";
+import { Check, AlertCircle, Loader2, Eye, Code2, WrapText } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
+import Editor from "@monaco-editor/react";
 import { useShallow } from "zustand/react/shallow";
 import { useDocumentsStore } from "../stores/document.store";
 
 const { Text } = Typography;
+
+type EditorInstance = Parameters<NonNullable<React.ComponentProps<typeof Editor>["onMount"]>>[0];
 
 export default function DocumentEditor() {
   const { activeDoc, docLoading, saveStatus, updateDocument } = useDocumentsStore(
@@ -23,15 +26,16 @@ export default function DocumentEditor() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isPreview, setIsPreview] = useState(false);
+  const [wordWrap, setWordWrap] = useState(true);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<EditorInstance | null>(null);
 
   // Sync from store when activeDoc changes
   useEffect(() => {
     if (activeDoc) {
       setTitle(activeDoc.title);
       setContent(activeDoc.content);
-      setIsPreview(false);
+      setIsPreview(true); // Default to preview mode
     }
   }, [activeDoc?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -60,31 +64,17 @@ export default function DocumentEditor() {
     }
   };
 
-  const handleContentChange = (newContent: string) => {
-    setContent(newContent);
+  const handleContentChange = (newContent: string | undefined) => {
+    const val = newContent ?? "";
+    setContent(val);
     if (activeDoc?.projectId) {
-      debouncedSave(activeDoc.projectId, activeDoc.id, { content: newContent });
+      debouncedSave(activeDoc.projectId, activeDoc.id, { content: val });
     }
   };
 
-  // Handle tab key in textarea
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Tab") {
-      e.preventDefault();
-      const textarea = textareaRef.current;
-      if (!textarea) return;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const newContent = content.slice(0, start) + "  " + content.slice(end);
-      setContent(newContent);
-      if (activeDoc?.projectId) {
-        debouncedSave(activeDoc.projectId, activeDoc.id, { content: newContent });
-      }
-      requestAnimationFrame(() => {
-        textarea.selectionStart = textarea.selectionEnd = start + 2;
-      });
-    }
-  };
+  const handleEditorMount = useCallback((ed: EditorInstance) => {
+    editorRef.current = ed;
+  }, []);
 
   if (docLoading) {
     return (
@@ -123,43 +113,58 @@ export default function DocumentEditor() {
           )}
         </div>
 
-        <div className="flex bg-surface-card rounded-sm p-0.5">
+        <div className="flex items-center gap-1.5">
           <button
-            className={`py-1.5 px-3.5 border-none bg-transparent text-xs font-semibold rounded-xs cursor-pointer transition-all duration-150 ${
-              !isPreview
-                ? "bg-canvas text-ink shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
-                : "text-muted hover:text-body"
+            onClick={() => setWordWrap(!wordWrap)}
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono bg-transparent border cursor-pointer transition-colors ${
+              wordWrap ? "text-[#8b5cf6] border-[#8b5cf640]" : "text-muted-soft border-hairline hover:border-hairline-strong hover:text-ink"
             }`}
-            onClick={() => setIsPreview(false)}
+            title="Toggle word wrap"
           >
-            Edit
+            <WrapText size={11} />
+            Wrap
           </button>
-          <button
-            className={`py-1.5 px-3.5 border-none bg-transparent text-xs font-semibold rounded-xs cursor-pointer transition-all duration-150 ${
-              isPreview
-                ? "bg-canvas text-ink shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
-                : "text-muted hover:text-body"
-            }`}
-            onClick={() => setIsPreview(true)}
-          >
-            Preview
-          </button>
+
+          <div className="flex bg-surface-card rounded-sm p-0.5">
+            <button
+              className={`py-1.5 px-3.5 border-none bg-transparent text-xs font-semibold rounded-xs cursor-pointer transition-all duration-150 inline-flex items-center gap-1.5 ${
+                !isPreview
+                  ? "bg-canvas text-ink shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                  : "text-muted hover:text-body"
+              }`}
+              onClick={() => setIsPreview(false)}
+            >
+              <Code2 size={13} />
+              Edit
+            </button>
+            <button
+              className={`py-1.5 px-3.5 border-none bg-transparent text-xs font-semibold rounded-xs cursor-pointer transition-all duration-150 inline-flex items-center gap-1.5 ${
+                isPreview
+                  ? "bg-canvas text-ink shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                  : "text-muted hover:text-body"
+              }`}
+              onClick={() => setIsPreview(true)}
+            >
+              <Eye size={13} />
+              Preview
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Title */}
-      <div className="flex-1 overflow-y-auto px-12 py-8 max-w-[900px] mx-auto w-full">
-        <input
-          className="block w-full border-none outline-none bg-transparent font-display text-4xl font-medium text-ink tracking-[-0.5px] leading-[1.2] mb-6 p-0 placeholder:text-hairline"
-          value={title}
-          onChange={(e) => handleTitleChange(e.target.value)}
-          placeholder="Untitled"
-          spellCheck={false}
-        />
-
-        {/* Content */}
-        {isPreview ? (
-          <div className="doc-markdown-preview">
+      {/* Content */}
+      {isPreview ? (
+        <div className="flex-1 overflow-y-auto w-full">
+          <div className="px-8 pt-6 pb-2">
+            <input
+              className="block w-full border-none outline-none bg-transparent font-display text-4xl font-medium text-ink tracking-[-0.5px] leading-[1.2] p-0 placeholder:text-hairline"
+              value={title}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              placeholder="Untitled"
+              spellCheck={false}
+            />
+          </div>
+          <div className="doc-markdown-preview px-8 pb-8">
             {content ? (
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
@@ -171,18 +176,114 @@ export default function DocumentEditor() {
               <p className="text-muted-soft italic">Nothing to preview</p>
             )}
           </div>
-        ) : (
-          <textarea
-            ref={textareaRef}
-            className="block w-full min-h-[calc(100vh-240px)] border-none outline-none bg-transparent font-sans text-[15px] leading-[1.7] text-body resize-none p-0 [tab-size:2]"
-            value={content}
-            onChange={(e) => handleContentChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Write in Markdown..."
-            spellCheck={false}
-          />
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {/* Inline Title */}
+          <div className="px-8 pt-6 pb-2 w-full shrink-0">
+            <input
+              className="block w-full border-none outline-none bg-transparent font-display text-4xl font-medium text-ink tracking-[-0.5px] leading-[1.2] p-0 placeholder:text-hairline"
+              value={title}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              placeholder="Untitled"
+              spellCheck={false}
+            />
+          </div>
+
+          {/* Monaco Editor */}
+          <div className="flex-1 min-h-0 doc-monaco-wrapper relative">
+            {/* Placeholder overlay */}
+            {!content && (
+              <div className="doc-editor-placeholder">Start writing with Markdown...</div>
+            )}
+            <Editor
+              language="markdown"
+              value={content}
+              onChange={handleContentChange}
+              theme="moro-light"
+              onMount={handleEditorMount}
+              beforeMount={(monaco) => {
+                try {
+                  monaco.editor.defineTheme("moro-light", {
+                    base: "vs",
+                    inherit: true,
+                    rules: [
+                      { token: "", foreground: "5a5852" },
+                      { token: "keyword", foreground: "f54e00" },
+                      { token: "comment", foreground: "a09c92", fontStyle: "italic" },
+                      { token: "string", foreground: "1f8a65" },
+                      { token: "number", foreground: "8b5cf6" },
+                      { token: "keyword.md", foreground: "cc785c", fontStyle: "bold" },
+                      { token: "string.link.md", foreground: "f54e00" },
+                      { token: "variable.md", foreground: "8b5cf6" },
+                      { token: "markup.bold", foreground: "26251e", fontStyle: "bold" },
+                      { token: "markup.italic", foreground: "5a5852", fontStyle: "italic" },
+                    ],
+                    colors: {
+                      "editor.background": "#fafaf7",
+                      "editor.foreground": "#5a5852",
+                      "editor.lineHighlightBackground": "#f7f7f4",
+                      "editor.selectionBackground": "#e6e5e044",
+                      "editor.inactiveSelectionBackground": "#e6e5e033",
+                      "editorLineNumber.foreground": "#cfcdc4",
+                      "editorLineNumber.activeForeground": "#807d72",
+                      "editorCursor.foreground": "#26251e",
+                      "editor.selectionHighlightBackground": "#cc785c18",
+                      "editorIndentGuide.background": "#efeee800",
+                      "editorIndentGuide.activeBackground": "#e6e5e0",
+                      "editorWidget.background": "#fafaf7",
+                      "editorWidget.border": "#e6e5e0",
+                      "input.background": "#f7f7f4",
+                      "input.border": "#e6e5e0",
+                      "scrollbar.shadow": "#00000008",
+                      "editorOverviewRuler.border": "#efeee800",
+                    },
+                  });
+                } catch {
+                  // theme might already be defined
+                }
+              }}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 15,
+                lineHeight: 1.7,
+                padding: { top: 16, bottom: 64 },
+                tabSize: 2,
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                stickyScroll: { enabled: false },
+                wordWrap: wordWrap ? "on" : "off",
+                renderLineHighlight: "line",
+                cursorBlinking: "smooth",
+                smoothScrolling: true,
+                fontFamily: "'Inter', 'SF Pro Text', system-ui, sans-serif",
+                lineNumbers: "off",
+                glyphMargin: false,
+                folding: false,
+                lineDecorationsWidth: 0,
+                lineNumbersMinChars: 0,
+                overviewRulerLanes: 0,
+                overviewRulerBorder: false,
+                hideCursorInOverviewRuler: true,
+                scrollbar: {
+                  vertical: "auto",
+                  horizontal: "hidden",
+                  verticalScrollbarSize: 6,
+                  useShadows: false,
+                },
+                renderWhitespace: "none",
+                quickSuggestions: false,
+                suggestOnTriggerCharacters: false,
+                wordBasedSuggestions: "off",
+                occurrencesHighlight: "off",
+                selectionHighlight: false,
+                contextmenu: false,
+                unicodeHighlight: { ambiguousCharacters: false },
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

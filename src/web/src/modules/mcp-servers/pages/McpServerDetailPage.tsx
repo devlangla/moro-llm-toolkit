@@ -1,211 +1,38 @@
+import { Spin, Switch, Tooltip, message } from "antd";
+import { ArrowLeft, BookOpen, Check, Copy, Globe, Key, Layers, Play, Shield, Terminal, Wrench, Zap } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { message, Spin, Switch, Tooltip } from "antd";
-import {
-  ArrowLeft,
-  Wrench,
-  Shield,
-  Copy,
-  Check,
-  Terminal,
-  Key,
-  Globe,
-  Database,
-  FileText,
-  HardDrive,
-  Variable,
-  Zap,
-} from "lucide-react";
-import type {
-  McpToolServerItem,
-  McpToolItem,
-} from "src/lib/types";
+import { API_BASE, client } from "src/lib/client";
 import { MoroError } from "src/lib/http";
-import { client, API_BASE } from "src/lib/client";
+import type { McpToolItem, McpToolServerItem } from "src/lib/types";
 
-// ── System tools that the built-in MCP server exposes ──────────────────────
+// ── MCP Meta-Tools (the 3 tools exposed to AI agents) ──────────────────────
 
-interface SystemTool {
-  id: string;
+interface McpMetaTool {
   name: string;
   description: string;
   icon: React.ReactNode;
-  category: string;
+  usage: string;
 }
 
-const SYSTEM_TOOLS: SystemTool[] = [
-  // ── Variables ──
+const MCP_META_TOOLS: McpMetaTool[] = [
   {
-    id: "variables_list",
-    name: "variables_list",
-    description: "List all variables in a namespace",
-    icon: <Variable size={14} strokeWidth={1.5} />,
-    category: "Variables",
+    name: "get_overview",
+    description: "Returns a summary of all available actions and resources",
+    icon: <Layers size={14} strokeWidth={1.5} />,
+    usage: "get_overview()",
   },
   {
-    id: "variables_get",
-    name: "variables_get",
-    description: "Get a variable by key from a namespace",
-    icon: <Variable size={14} strokeWidth={1.5} />,
-    category: "Variables",
+    name: "get_docs",
+    description: "Returns detailed params, types, and examples for an action",
+    icon: <BookOpen size={14} strokeWidth={1.5} />,
+    usage: 'get_docs({ action: "variables.set" })',
   },
   {
-    id: "variables_set",
-    name: "variables_set",
-    description: "Create or update a variable (upsert)",
-    icon: <Variable size={14} strokeWidth={1.5} />,
-    category: "Variables",
-  },
-  {
-    id: "variables_delete",
-    name: "variables_delete",
-    description: "Delete a variable by key",
-    icon: <Variable size={14} strokeWidth={1.5} />,
-    category: "Variables",
-  },
-  // ── Variable Namespaces ──
-  {
-    id: "variable_namespaces_list",
-    name: "variable_namespaces_list",
-    description: "List all variable namespaces",
-    icon: <Variable size={14} strokeWidth={1.5} />,
-    category: "Variable Namespaces",
-  },
-  {
-    id: "variable_namespaces_create",
-    name: "variable_namespaces_create",
-    description: "Create a new variable namespace",
-    icon: <Variable size={14} strokeWidth={1.5} />,
-    category: "Variable Namespaces",
-  },
-  {
-    id: "variable_namespaces_update",
-    name: "variable_namespaces_update",
-    description: "Update a variable namespace",
-    icon: <Variable size={14} strokeWidth={1.5} />,
-    category: "Variable Namespaces",
-  },
-  {
-    id: "variable_namespaces_delete",
-    name: "variable_namespaces_delete",
-    description: "Delete a variable namespace and all its variables",
-    icon: <Variable size={14} strokeWidth={1.5} />,
-    category: "Variable Namespaces",
-  },
-  // ── Databases & Tables ──
-  {
-    id: "databases_list",
-    name: "databases_list",
-    description: "List all databases",
-    icon: <Database size={14} strokeWidth={1.5} />,
-    category: "Tables",
-  },
-  {
-    id: "tables_list",
-    name: "tables_list",
-    description: "List all tables in a database",
-    icon: <Database size={14} strokeWidth={1.5} />,
-    category: "Tables",
-  },
-  {
-    id: "tables_query",
-    name: "tables_query",
-    description: "Query rows from a table with filters and pagination",
-    icon: <Database size={14} strokeWidth={1.5} />,
-    category: "Tables",
-  },
-  {
-    id: "tables_insert",
-    name: "tables_insert",
-    description: "Insert a new row into a table",
-    icon: <Database size={14} strokeWidth={1.5} />,
-    category: "Tables",
-  },
-  {
-    id: "tables_update",
-    name: "tables_update",
-    description: "Update an existing row in a table",
-    icon: <Database size={14} strokeWidth={1.5} />,
-    category: "Tables",
-  },
-  {
-    id: "tables_delete",
-    name: "tables_delete",
-    description: "Delete a row from a table",
-    icon: <Database size={14} strokeWidth={1.5} />,
-    category: "Tables",
-  },
-  // ── Documents ──
-  {
-    id: "projects_list",
-    name: "projects_list",
-    description: "List all document projects",
-    icon: <FileText size={14} strokeWidth={1.5} />,
-    category: "Documents",
-  },
-  {
-    id: "documents_list",
-    name: "documents_list",
-    description: "List all documents in a project",
-    icon: <FileText size={14} strokeWidth={1.5} />,
-    category: "Documents",
-  },
-  {
-    id: "documents_get",
-    name: "documents_get",
-    description: "Get a document by ID with full content",
-    icon: <FileText size={14} strokeWidth={1.5} />,
-    category: "Documents",
-  },
-  {
-    id: "documents_create",
-    name: "documents_create",
-    description: "Create a new document in a project",
-    icon: <FileText size={14} strokeWidth={1.5} />,
-    category: "Documents",
-  },
-  {
-    id: "documents_update",
-    name: "documents_update",
-    description: "Update a document's title or content",
-    icon: <FileText size={14} strokeWidth={1.5} />,
-    category: "Documents",
-  },
-  // ── Storage ──
-  {
-    id: "storage_list_buckets",
-    name: "storage_list_buckets",
-    description: "List all storage buckets",
-    icon: <HardDrive size={14} strokeWidth={1.5} />,
-    category: "Storage",
-  },
-  {
-    id: "storage_list_objects",
-    name: "storage_list_objects",
-    description: "List objects in a storage bucket",
-    icon: <HardDrive size={14} strokeWidth={1.5} />,
-    category: "Storage",
-  },
-  {
-    id: "storage_get_object_info",
-    name: "storage_get_object_info",
-    description: "Get metadata for a specific object in a bucket",
-    icon: <HardDrive size={14} strokeWidth={1.5} />,
-    category: "Storage",
-  },
-  {
-    id: "storage_get_download_url",
-    name: "storage_get_download_url",
-    description: "Generate a pre-signed download URL for a file",
-    icon: <HardDrive size={14} strokeWidth={1.5} />,
-    category: "Storage",
-  },
-  {
-    id: "storage_delete_object",
-    name: "storage_delete_object",
-    description: "Delete an object from a storage bucket",
-    icon: <HardDrive size={14} strokeWidth={1.5} />,
-    category: "Storage",
+    name: "execute",
+    description: "Validates payload and executes the specified action",
+    icon: <Play size={14} strokeWidth={1.5} />,
+    usage: 'execute({ action: "variables.set", payload: { ... } })',
   },
 ];
 
@@ -226,10 +53,7 @@ export default function McpServerDetailPage() {
     if (!id) return;
     setLoading(true);
     try {
-      const [srv, toolsRes] = await Promise.all([
-        client.mcpToolServers.get(id),
-        client.mcpToolServers.listTools(id),
-      ]);
+      const [srv, toolsRes] = await Promise.all([client.mcpToolServers.get(id), client.mcpToolServers.listTools(id)]);
       setServer(srv);
       setTools(toolsRes.items);
     } catch {
@@ -263,7 +87,8 @@ export default function McpServerDetailPage() {
   };
 
   const isBuiltin = server?.type === "builtin";
-  const mcpEndpoint = `${API_BASE}/api/mcp/${id}`;
+  const apiOrigin = API_BASE || `${window.location.protocol}//${window.location.hostname}:18080`;
+  const mcpEndpoint = `${apiOrigin}/api/mcp/${id}`;
 
   if (loading) {
     return (
@@ -284,9 +109,7 @@ export default function McpServerDetailPage() {
           className="flex items-center gap-1.5 text-muted text-[13px] mb-4 bg-transparent border-none cursor-pointer hover:text-ink transition-colors p-0"
         >
           <ArrowLeft size={14} />
-          <span className="font-mono text-[11px] uppercase tracking-wide">
-            MCP Servers
-          </span>
+          <span className="font-mono text-[11px] uppercase tracking-wide">MCP Servers</span>
         </button>
 
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -296,18 +119,10 @@ export default function McpServerDetailPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-display text-[28px] font-normal text-ink tracking-[-0.56px] m-0 leading-tight">
-                  {server.name}
-                </h1>
-                <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#dfa88f]/30 text-[#8a5a3a]">
-                  Built-in
-                </span>
+                <h1 className="font-display text-[28px] font-normal text-ink tracking-[-0.56px] m-0 leading-tight">{server.name}</h1>
+                <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#dfa88f]/30 text-[#8a5a3a]">Built-in</span>
               </div>
-              {server.description && (
-                <p className="text-[13px] text-muted mt-1 m-0">
-                  {server.description}
-                </p>
-              )}
+              {server.description && <p className="text-[13px] text-muted mt-1 m-0">{server.description}</p>}
             </div>
           </div>
 
@@ -315,9 +130,7 @@ export default function McpServerDetailPage() {
             <button
               onClick={() => setActiveTab("tools")}
               className={`flex items-center gap-1.5 h-[30px] px-3 rounded-md font-mono text-[11px] uppercase tracking-wider border-none cursor-pointer transition-all duration-150 ${
-                activeTab === "tools"
-                  ? "bg-canvas text-ink shadow-sm"
-                  : "bg-transparent text-muted hover:text-ink"
+                activeTab === "tools" ? "bg-canvas text-ink shadow-sm" : "bg-transparent text-muted hover:text-ink"
               }`}
             >
               <Wrench size={12} />
@@ -326,9 +139,7 @@ export default function McpServerDetailPage() {
             <button
               onClick={() => setActiveTab("config")}
               className={`flex items-center gap-1.5 h-[30px] px-3 rounded-md font-mono text-[11px] uppercase tracking-wider border-none cursor-pointer transition-all duration-150 ${
-                activeTab === "config"
-                  ? "bg-canvas text-ink shadow-sm"
-                  : "bg-transparent text-muted hover:text-ink"
+                activeTab === "config" ? "bg-canvas text-ink shadow-sm" : "bg-transparent text-muted hover:text-ink"
               }`}
             >
               <Terminal size={12} />
@@ -341,17 +152,9 @@ export default function McpServerDetailPage() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-8 py-8">
         {activeTab === "tools" ? (
-          <ToolsTab
-            isBuiltin={isBuiltin}
-            tools={tools}
-            onToggle={handleToggleTool}
-          />
+          <ToolsTab isBuiltin={isBuiltin} tools={tools} onToggle={handleToggleTool} />
         ) : (
-          <ConfigTab
-            mcpEndpoint={mcpEndpoint}
-            copiedField={copiedField}
-            onCopy={copyToClipboard}
-          />
+          <ConfigTab mcpEndpoint={mcpEndpoint} copiedField={copiedField} onCopy={copyToClipboard} />
         )}
       </div>
     </div>
@@ -369,34 +172,17 @@ function ToolsTab({
   tools: McpToolItem[];
   onToggle: (t: McpToolItem) => void;
 }) {
-  // Group system tools by category
-  const categories = Array.from(
-    new Set(SYSTEM_TOOLS.map((t) => t.category)),
-  );
-
   if (!isBuiltin) {
-    // Custom server tools (future)
     return (
       <div className="flex flex-col gap-2">
         {tools.map((tool) => (
-          <div
-            key={tool.id}
-            className="flex items-center justify-between px-4 py-3 border border-hairline rounded-md bg-surface-card"
-          >
+          <div key={tool.id} className="flex items-center justify-between px-4 py-3 border border-hairline rounded-md bg-surface-card">
             <div className="flex items-center gap-3 min-w-0">
               <Wrench size={14} className="text-muted shrink-0" />
-              <span className="font-mono text-[13px] text-ink font-medium truncate">
-                {tool.name}
-              </span>
-              <span className="text-[12px] text-muted truncate">
-                {tool.description}
-              </span>
+              <span className="font-mono text-[13px] text-ink font-medium truncate">{tool.name}</span>
+              <span className="text-[12px] text-muted truncate">{tool.description}</span>
             </div>
-            <Switch
-              size="small"
-              checked={!!tool.isActive}
-              onChange={() => onToggle(tool)}
-            />
+            <Switch size="small" checked={!!tool.isActive} onChange={() => onToggle(tool)} />
           </div>
         ))}
       </div>
@@ -404,53 +190,36 @@ function ToolsTab({
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-[800px]">
-      <div className="flex items-center gap-2 mb-1">
-        <Zap size={14} className="text-muted" />
-        <span className="font-mono text-[11px] uppercase tracking-wider text-muted">
-          System Tools — {SYSTEM_TOOLS.length} Available
-        </span>
-      </div>
-
-      {categories.map((cat, cidx) => (
-        <div
-          key={cat}
-          className="opacity-0 animate-[fadeInUp_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]"
-          style={{ animationDelay: `${cidx * 0.05}s` }}
-        >
-          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-soft mb-2 px-1">
-            {cat}
-          </div>
-          <div className="flex flex-col gap-1.5">
-            {SYSTEM_TOOLS.filter((t) => t.category === cat).map((tool) => (
-              <div
-                key={tool.id}
-                className="flex items-center justify-between px-4 py-3 border border-hairline rounded-md bg-surface-card hover:border-hairline-strong transition-colors duration-150"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex items-center justify-center w-7 h-7 rounded-md bg-canvas border border-hairline-soft text-muted shrink-0">
-                    {tool.icon}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="font-mono text-[13px] text-ink font-medium">
-                      {tool.name}
-                    </div>
-                    <div className="text-[12px] text-muted mt-0.5">
-                      {tool.description}
-                    </div>
-                  </div>
+    <div className="flex flex-col gap-8 max-w-[800px] mx-auto">
+      {/* ── 3 Meta-Tools ── */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Zap size={14} className="text-muted" />
+          <span className="font-mono text-[11px] uppercase tracking-wider text-muted">MCP Tools — 3 Exposed to Agents</span>
+        </div>
+        <div className="flex flex-col gap-2">
+          {MCP_META_TOOLS.map((tool, idx) => (
+            <div
+              key={tool.name}
+              className="flex items-center justify-between px-4 py-3.5 border border-hairline rounded-md bg-surface-card hover:border-hairline-strong transition-colors duration-150 opacity-0 animate-[fadeInUp_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]"
+              style={{ animationDelay: `${idx * 0.05}s` }}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-[#dfa88f]/15 border border-[#dfa88f]/30 text-[#8a5a3a] shrink-0">
+                  {tool.icon}
                 </div>
-                <div className="flex items-center gap-3 shrink-0 ml-4">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#1f8a65]">
-                    ACTIVE
-                  </span>
-                  <Switch size="small" checked disabled />
+                <div className="min-w-0">
+                  <div className="font-mono text-[13px] text-ink font-medium">{tool.name}</div>
+                  <div className="text-[12px] text-muted mt-0.5">{tool.description}</div>
                 </div>
               </div>
-            ))}
-          </div>
+              <div className="hidden sm:block font-mono text-[11px] text-muted-soft bg-canvas border border-hairline rounded px-2.5 py-1 shrink-0 ml-4">
+                {tool.usage}
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
     </div>
   );
 }
@@ -487,7 +256,7 @@ function ConfigTab({
     {
       mcpServers: {
         "moro-llm-toolkit": {
-          url: `${mcpEndpoint}`,
+          serverUrl: `${mcpEndpoint}`,
           headers: {
             Authorization: "Bearer <YOUR_API_KEY>",
           },
@@ -499,46 +268,26 @@ function ConfigTab({
   );
 
   return (
-    <div className="flex flex-col gap-8 max-w-[800px]">
+    <div className="flex flex-col gap-8 max-w-[800px] mx-auto">
       {/* Endpoint Info */}
-      <div
-        className="opacity-0 animate-[fadeInUp_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]"
-      >
+      <div className="opacity-0 animate-[fadeInUp_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]">
         <div className="flex items-center gap-2 mb-4">
           <Globe size={14} className="text-muted" />
-          <span className="font-mono text-[11px] uppercase tracking-wider text-muted">
-            MCP Endpoint
-          </span>
+          <span className="font-mono text-[11px] uppercase tracking-wider text-muted">MCP Endpoint</span>
         </div>
         <div className="flex items-center gap-2 px-4 py-3 rounded-md border border-hairline bg-surface-card">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-[#1f8a65] bg-[#1f8a65]/10 px-2 py-0.5 rounded shrink-0">
-            POST
-          </span>
-          <code className="font-mono text-[13px] text-ink flex-1 break-all">
-            {mcpEndpoint}
-          </code>
-          <CopyButton
-            text={mcpEndpoint}
-            field="endpoint"
-            copiedField={copiedField}
-            onCopy={onCopy}
-          />
+          <span className="font-mono text-[10px] uppercase tracking-wider text-[#1f8a65] bg-[#1f8a65]/10 px-2 py-0.5 rounded shrink-0">POST</span>
+          <code className="font-mono text-[13px] text-ink flex-1 break-all">{mcpEndpoint}</code>
+          <CopyButton text={mcpEndpoint} field="endpoint" copiedField={copiedField} onCopy={onCopy} />
         </div>
-        <p className="text-[12px] text-muted mt-2 mb-0">
-          Streamable HTTP transport — compatible with MCP SDK 2025+
-        </p>
+        <p className="text-[12px] text-muted mt-2 mb-0">Streamable HTTP transport — compatible with MCP SDK 2025+</p>
       </div>
 
       {/* Authentication */}
-      <div
-        className="opacity-0 animate-[fadeInUp_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]"
-        style={{ animationDelay: "0.05s" }}
-      >
+      <div className="opacity-0 animate-[fadeInUp_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]" style={{ animationDelay: "0.05s" }}>
         <div className="flex items-center gap-2 mb-4">
           <Key size={14} className="text-muted" />
-          <span className="font-mono text-[11px] uppercase tracking-wider text-muted">
-            Authentication
-          </span>
+          <span className="font-mono text-[11px] uppercase tracking-wider text-muted">Authentication</span>
         </div>
         <div className="px-4 py-4 rounded-md border border-hairline bg-surface-card flex flex-col gap-3">
           <div className="flex items-start gap-3">
@@ -546,22 +295,16 @@ function ConfigTab({
               <span className="font-mono text-[10px] text-[#8a5a3a] font-bold">1</span>
             </div>
             <div>
-              <div className="text-[13px] text-ink font-medium">
-                API Key (Recommended)
-              </div>
+              <div className="text-[13px] text-ink font-medium">API Key (Recommended)</div>
               <div className="text-[12px] text-muted mt-0.5">
                 Create an API Key in{" "}
-                <a
-                  href="/api-keys"
-                  className="text-ink underline hover:no-underline"
-                >
+                <a href="/api-keys" className="text-ink underline hover:no-underline">
                   Settings → API Keys
                 </a>
                 , then pass it in the header:
               </div>
               <div className="mt-2 flex items-center gap-2 px-3 py-2 rounded-md bg-canvas border border-hairline font-mono text-[12px] text-ink">
-                <span className="text-muted-soft">Authorization:</span> Bearer
-                ltk_xxxxxxxx...
+                <span className="text-muted-soft">Authorization:</span> Bearer ltk_xxxxxxxx...
               </div>
             </div>
           </div>
@@ -571,11 +314,10 @@ function ConfigTab({
               <span className="font-mono text-[10px] text-muted font-bold">2</span>
             </div>
             <div>
-              <div className="text-[13px] text-ink font-medium">
-                JWT Bearer Token
-              </div>
+              <div className="text-[13px] text-ink font-medium">JWT Bearer Token</div>
               <div className="text-[12px] text-muted mt-0.5">
-                Use the access token from <code className="text-[11px] bg-canvas px-1 py-0.5 rounded border border-hairline">POST /api/auth/login</code> — suitable for dev/testing.
+                Use the access token from <code className="text-[11px] bg-canvas px-1 py-0.5 rounded border border-hairline">POST /api/auth/login</code> —
+                suitable for dev/testing.
               </div>
             </div>
           </div>
@@ -638,23 +380,13 @@ function ConfigBlock({
   delay?: string;
 }) {
   return (
-    <div
-      className="opacity-0 animate-[fadeInUp_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]"
-      style={{ animationDelay: delay }}
-    >
+    <div className="opacity-0 animate-[fadeInUp_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]" style={{ animationDelay: delay }}>
       <div className="flex items-center justify-between mb-2">
         <div>
-          <div className="font-mono text-[12px] text-ink font-medium">
-            {title}
-          </div>
+          <div className="font-mono text-[12px] text-ink font-medium">{title}</div>
           <div className="text-[11px] text-muted-soft mt-0.5">{subtitle}</div>
         </div>
-        <CopyButton
-          text={code}
-          field={field}
-          copiedField={copiedField}
-          onCopy={onCopy}
-        />
+        <CopyButton text={code} field={field} copiedField={copiedField} onCopy={onCopy} />
       </div>
       <pre className="m-0 p-4 rounded-md bg-[#1e1e1e] border border-hairline font-mono text-[12px] text-[#d4d4d4] overflow-x-auto leading-relaxed whitespace-pre">
         {code}

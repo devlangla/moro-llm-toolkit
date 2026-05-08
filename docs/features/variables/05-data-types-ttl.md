@@ -3,9 +3,8 @@
     <id>variable_data_types_ttl</id>
     <title>Kiểu dữ liệu & TTL</title>
     <group>Dynamic Variables</group>
-    <status>planned</status>
+    <status>done</status>
     <priority>p1</priority>
-    <updated>2026-04-28</updated>
   </meta>
 
   <overview>
@@ -20,14 +19,17 @@
       <benefit>dữ liệu tự cleanup sau thời gian nhất định</benefit>
     </story>
   </user-stories>
-
-  <acceptance-criteria>
-    <criterion id="AC-01">Kiểu dữ liệu: string, number, boolean, json (object/array).</criterion>
-    <criterion id="AC-02">Value lưu dạng text trong DB, type metadata dùng để parse/validate khi đọc.</criterion>
-    <criterion id="AC-03">TTL: số giây, 0 hoặc null = không hết hạn (persistent).</criterion>
-    <criterion id="AC-04">Trường expiresAt trong DB = createdAt + TTL seconds. Null nếu persistent.</criterion>
-    <criterion id="AC-05">Background job (hoặc lazy check) tự động xoá variables đã expired.</criterion>
-    <criterion id="AC-06">API trả 404 nếu variable đã expired (dù chưa xoá physical).</criterion>
-    <criterion id="AC-07">Auto-detect type khi tạo: "123" → number, "true"/"false" → boolean, "{...}" → json, còn lại → string.</criterion>
-  </acceptance-criteria>
 </feature>
+
+## Server
+- [x] Kiểu dữ liệu: string, number, boolean, json (object/array)
+- [x] Value lưu dạng text trong DB, type metadata dùng để parse/validate khi đọc
+- [x] TTL: số giây, 0 hoặc null = persistent (không hết hạn)
+- [x] expiresAt trong DB = createdAt + TTL seconds, null nếu persistent
+- [x] Lazy check: API trả 404 nếu variable đã expired (dù chưa xoá physical)
+- [x] Auto-detect type: "123" → number, "true"/"false" → boolean, "{...}" → json
+
+## Web
+- [x] TTL hiển thị dạng countdown hoặc "No expiry" trên mỗi variable row
+- [x] Type hiển thị badge (string/number/boolean/json)
+- [x] Variables expired → ẩn khỏi danh sách (hoặc hiển thị strikethrough)

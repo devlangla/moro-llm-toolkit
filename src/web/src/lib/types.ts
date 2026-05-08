@@ -335,6 +335,7 @@ export interface UpdateProjectInput {
 export interface DocumentItem {
   id: string;
   projectId: string | null;
+  parentId: string | null;
   title: string;
   icon: string | null;
   order: number;
@@ -353,6 +354,7 @@ export interface CreateDocumentInput {
   title?: string;
   icon?: string | null;
   content?: string;
+  parentId?: string | null;
 }
 
 export interface UpdateDocumentInput {
@@ -360,6 +362,7 @@ export interface UpdateDocumentInput {
   icon?: string | null;
   cover?: string | null;
   content?: string;
+  parentId?: string | null;
 }
 
 export interface DocumentSearchResult {
@@ -561,3 +564,78 @@ export interface McpToolTestResult {
   stderr: string;
 }
 
+// ── Dynamic APIs ────────────────────────────────────────────────────────────
+
+export interface DynamicApiItem {
+  id: string;
+  name: string;
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  path: string;
+  description: string | null;
+  code: string;
+  dependencies: Record<string, string> | null;
+  isActive: boolean;
+  isPublic: boolean;
+  timeout: number;
+  createdBy: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface CreateDynamicApiInput {
+  name: string;
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  path: string;
+  description?: string;
+  code?: string;
+  dependencies?: Record<string, string>;
+  isPublic?: boolean;
+  timeout?: number;
+}
+
+export interface UpdateDynamicApiInput {
+  name?: string;
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  path?: string;
+  description?: string | null;
+  code?: string;
+  dependencies?: Record<string, string> | null;
+  isActive?: boolean;
+  isPublic?: boolean;
+  timeout?: number;
+}
+
+export interface DynamicApiListQuery {
+  search?: string;
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  status?: "active" | "inactive";
+  page?: number;
+  limit?: number;
+}
+
+export interface DynamicApiListResult {
+  items: DynamicApiItem[];
+  meta: { total: number; page: number; limit: number; hasMore: boolean };
+}
+
+export interface DynamicApiLogItem {
+  id: string;
+  apiId: string;
+  method: string;
+  path: string;
+  statusCode: number;
+  executionTimeMs: number;
+  executionMode: "fast" | "isolated";
+  requestHeaders: string | null;
+  requestBody: string | null;
+  responseBody: string | null;
+  consoleOutput: string | null;
+  error: string | null;
+  ip: string | null;
+  createdAt: number;
+}
+
+export interface DynamicApiLogListResult {
+  items: DynamicApiLogItem[];
+  meta: { total: number; page: number; limit: number; hasMore: boolean };
+}

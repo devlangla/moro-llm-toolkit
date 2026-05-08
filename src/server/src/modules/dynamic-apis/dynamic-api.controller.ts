@@ -1,0 +1,251 @@
+import type { FastifyInstance } from "fastify";
+import type { ZodTypeProvider } from "fastify-type-provider-zod";
+import { requireAuth } from "../../common/auth/middleware.js";
+import {
+  createDynamicApiBodySchema,
+  updateDynamicApiBodySchema,
+  listDynamicApiQuerySchema,
+  listDynamicApiLogsQuerySchema,
+  dryRunBodySchema,
+} from "./dynamic-api.schema.js";
+import type {
+  CreateDynamicApiBody,
+  UpdateDynamicApiBody,
+  ListDynamicApiQuery,
+  ListDynamicApiLogsQuery,
+  DryRunBody,
+} from "./dynamic-api.schema.js";
+import {
+  listDynamicApis,
+  getDynamicApiById,
+  createDynamicApi,
+  updateDynamicApi,
+  deleteDynamicApi,
+  listDynamicApiLogs,
+} from "./dynamic-api.service.js";
+import { executeIsolated, hasNpmImports } from "../../common/sandbox/js-executor.js";
+
+export function registerDynamicApiRoutes(app: FastifyInstance) {
+  const r = app.withTypeProvider<ZodTypeProvider>();
+
+  // GET / — list all dynamic APIs
+  r.get(
+    "/",
+    {
+      preHandler: [requireAuth],
+      schema: { querystring: listDynamicApiQuerySchema },
+    },
+    async (req, reply) => {
+      const result = await listDynamicApis(req.query as ListDynamicApiQuery);
+      return reply.send(result);
+    }
+  );
+
+  // POST / — create dynamic API
+  r.post(
+    "/",
+    {
+      preHandler: [requireAuth],
+      schema: { body: createDynamicApiBodySchema },
+    },
+    async (req, reply) => {
+      const result = await createDynamicApi(
+        req.body as CreateDynamicApiBody,
+        req.auth!.userId
+      );
+      return reply.code(201).send(result);
+    }
+  );
+
+  // GET /:id — get dynamic API by ID
+  r.get("/:id", { preHandler: [requireAuth] }, async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const result = await getDynamicApiById(id);
+    if (!result)
+      return reply
+        .code(400)
+        .send({ error: "not_found", message: "API endpoint not found" });
+    return reply.send(result);
+  });
+
+  // PATCH /:id — update dynamic API
+  r.patch(
+    "/:id",
+    {
+      preHandler: [requireAuth],
+      schema: { body: updateDynamicApiBodySchema },
+    },
+    async (req, reply) => {
+      const { id } = req.params as { id: string };
+      const existing = await getDynamicApiById(id);
+      if (!existing)
+        return reply
+          .code(400)
+          .send({ error: "not_found", message: "API endpoint not found" });
+
+      const result = await updateDynamicApi(
+        id,
+        req.body as UpdateDynamicApiBody
+      );
+      return reply.send(result);
+    }
+  );
+
+  // DELETE /:id — delete dynamic API
+  r.delete("/:id", { preHandler: [requireAuth] }, async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const existing = await getDynamicApiById(id);
+    if (!existing)
+      return reply
+        .code(400)
+        .send({ error: "not_found", message: "API endpoint not found" });
+
+    await deleteDynamicApi(id);
+    return reply.send({ id, deleted: true });
+  });
+
+  // GET /:id/logs — list logs for a dynamic API
+  r.get(
+    "/:id/logs",
+    {
+      preHandler: [requireAuth],
+      schema: { querystring: listDynamicApiLogsQuerySchema },
+    },
+    async (req, reply) => {
+      const { id } = req.params as { id: string };
+      const existing = await getDynamicApiById(id);
+      if (!existing)
+        return reply
+          .code(400)
+          .send({ error: "not_found", message: "API endpoint not found" });
+
+      const result = await listDynamicApiLogs(
+        id,
+        req.query as ListDynamicApiLogsQuery
+      );
+      return reply.send(result);
+    }
+  );
+
+  // POST /:id/test — dry-run: execute provided code directly (not saved code)
+  r.post(
+    "/:id/test",
+    {
+      preHandler: [requireAuth],
+      schema: { body: dryRunBodySchema },
+    },
+    async (req, reply) => {
+      const { id } = req.params as { id: string };
+      const existing = await getDynamicApiById(id);
+      if (!existing)
+        return reply
+          .code(400)
+          .send({ error: "not_found", message: "API endpoint not found" });
+
+      const input = req.body as DryRunBody;
+      const startTime = Date.now();
+
+      const requestObj = {
+        method: input.method,
+        path: input.path,
+        params: input.params ?? {},
+        query: input.query ?? {},
+        headers: input.headers ?? {},
+        body: input.body ?? null,
+      };
+
+      const needsIsolation = hasNpmImports(input.code);
+
+      if (needsIsolation) {
+        // Isolated mode: run in subprocess
+        const result = await executeIsolated({
+          apiId: id,
+          code: input.code,
+          request: requestObj,
+          timeoutMs: input.timeout ?? 30000,
+        });
+
+        return reply.send({
+          status: result.status,
+          headers: result.headers,
+          body: result.body,
+          consoleLogs: result.consoleLogs,
+          executionTimeMs: result.executionTimeMs,
+          error: result.error,
+        });
+      }
+
+      // Fast mode: compile and run in-process
+      const consoleLogs: string[] = [];
+      const context = {
+        log: (...args: unknown[]) => {
+          consoleLogs.push(
+            args
+              .map((a) => (typeof a === "string" ? a : JSON.stringify(a)))
+              .join(" ")
+          );
+        },
+      };
+
+      try {
+        const cleanCode = input.code
+          .replace(/export\s+default\s+/g, "")
+          .replace(/module\.exports\s*=\s*/g, "");
+
+        const AsyncFunction = Object.getPrototypeOf(
+          async function () {}
+        ).constructor;
+
+        const factory = new AsyncFunction(
+          `${cleanCode}
+          if (typeof handler === 'function') return handler;
+          throw new Error('No handler function found.');`
+        );
+
+        const handler = await factory();
+
+        const result = await Promise.race([
+          handler(requestObj, context),
+          new Promise((_, reject) =>
+            setTimeout(
+              () => reject(new Error("Execution timeout")),
+              input.timeout ?? 30000
+            )
+          ),
+        ]);
+
+        const executionTimeMs = Date.now() - startTime;
+
+        if (result && typeof result === "object") {
+          return reply.send({
+            status: (result as Record<string, unknown>).status ?? 200,
+            headers: (result as Record<string, unknown>).headers,
+            body: (result as Record<string, unknown>).body ?? null,
+            consoleLogs,
+            executionTimeMs,
+          });
+        }
+
+        return reply.send({
+          status: 200,
+          body: result,
+          consoleLogs,
+          executionTimeMs,
+        });
+      } catch (err: unknown) {
+        const error = err as Error;
+        return reply.send({
+          status: 500,
+          body: {
+            error: "execution_error",
+            message: error.message,
+          },
+          consoleLogs,
+          executionTimeMs: Date.now() - startTime,
+          error: error.stack || error.message,
+        });
+      }
+    }
+  );
+}
+

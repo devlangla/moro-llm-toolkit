@@ -5,7 +5,6 @@
     <group>User Management</group>
     <status>in_progress</status>
     <priority>p0</priority>
-    <updated>2026-05-01</updated>
   </meta>
 
   <overview>
@@ -31,15 +30,19 @@
       <benefit>truy cập API mà không cần username/password</benefit>
     </story>
   </user-stories>
-
-  <acceptance-criteria>
-    <criterion id="AC-01">GET /api/api-keys — list all API keys (masked, không trả key gốc). Chỉ admin+.</criterion>
-    <criterion id="AC-02">POST /api/api-keys — tạo API key mới { name, permissions?, expiresAt? }. Trả key gốc 1 lần duy nhất.</criterion>
-    <criterion id="AC-03">DELETE /api/api-keys/:id — revoke (xoá) API key.</criterion>
-    <criterion id="AC-04">Middleware resolveAuth hỗ trợ xác thực bằng API key (Bearer ltk_xxx hoặc X-API-Key header).</criterion>
-    <criterion id="AC-05">API key hash bằng SHA-256, chỉ lưu hash + prefix 8 chars vào DB.</criterion>
-    <criterion id="AC-06">Hỗ trợ expiration — key hết hạn tự động bị từ chối.</criterion>
-    <criterion id="AC-07">Cập nhật last_used_at khi key được dùng.</criterion>
-    <criterion id="AC-08">Web UI: trang quản lý API keys trong settings, copy key, revoke.</criterion>
-  </acceptance-criteria>
 </feature>
+
+## Server
+- [x] GET /api/api-keys — list all API keys (masked, không trả key gốc). Chỉ admin+
+- [x] POST /api/api-keys { name, permissions?, expiresAt? } — tạo key mới. Trả key gốc 1 lần duy nhất
+- [x] DELETE /api/api-keys/:id — revoke (xoá) API key
+- [x] Middleware resolveAuth hỗ trợ xác thực bằng API key (Bearer ltk_xxx hoặc X-API-Key)
+- [x] API key hash bằng SHA-256, chỉ lưu hash + prefix 8 chars vào DB
+- [x] Hỗ trợ expiration — key hết hạn tự động bị từ chối
+- [x] Cập nhật last_used_at khi key được dùng
+
+## Web
+- [x] Trang quản lý API keys trong settings
+- [x] Tạo key → hiển thị key gốc 1 lần, copy button
+- [x] Danh sách keys: name, prefix, created, last used, expiry
+- [x] Revoke key → confirm dialog → xoá

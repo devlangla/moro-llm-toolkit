@@ -31,7 +31,7 @@ interface DocumentsState {
   fetchDocuments: (projectId: string) => Promise<void>;
   fetchDocument: (projectId: string, id: string) => Promise<void>;
   resolveDocument: (id: string) => Promise<DocumentDetail | null>;
-  createDocument: (projectId: string) => Promise<DocumentDetail | null>;
+  createDocument: (projectId: string, parentId?: string | null) => Promise<DocumentDetail | null>;
   updateDocument: (projectId: string, id: string, data: { title?: string; content?: string; icon?: string | null }) => Promise<void>;
   deleteDocument: (projectId: string, id: string) => Promise<void>;
   clearActiveDoc: () => void;
@@ -154,9 +154,11 @@ export const useDocumentsStore = create<DocumentsState>()(
         }
       },
 
-      createDocument: async (projectId: string) => {
+      createDocument: async (projectId: string, parentId?: string | null) => {
         try {
-          const doc = await client.documents.create(projectId, { title: "Untitled" });
+          const input: { title: string; parentId?: string | null } = { title: "Untitled" };
+          if (parentId) input.parentId = parentId;
+          const doc = await client.documents.create(projectId, input);
           await get().fetchDocuments(projectId);
           return doc;
         } catch {

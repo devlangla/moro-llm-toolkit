@@ -3,14 +3,14 @@
     <id>doc_api</id>
     <title>API CRUD cho documents</title>
     <group>Documents</group>
-    <status>planned</status>
+    <status>done</status>
     <priority>p0</priority>
-    <updated>2026-05-01</updated>
   </meta>
 
   <overview>
     RESTful API đầy đủ cho CRUD operations trên documents, scoped theo project.
-    API này được sử dụng bởi cả frontend UI và MCP tools (agents).
+    API này được sử dụng bởi frontend UI và MCP tools.
+    Base: /api/projects/:projectId/documents
   </overview>
 
   <user-stories>
@@ -20,16 +20,15 @@
       <benefit>tương tác với Documents qua HTTP</benefit>
     </story>
   </user-stories>
-
-  <acceptance-criteria>
-    <criterion id="AC-01">GET /api/projects/:projectId/documents — list all documents trong project (tree structure, có option flat).</criterion>
-    <criterion id="AC-02">POST /api/projects/:projectId/documents — create document (title, parentId?, icon?, content?).</criterion>
-    <criterion id="AC-03">GET /api/projects/:projectId/documents/:id — get document detail với blocks content.</criterion>
-    <criterion id="AC-04">PATCH /api/projects/:projectId/documents/:id — update title, icon, cover, blocks.</criterion>
-    <criterion id="AC-05">DELETE /api/projects/:projectId/documents/:id — delete document + cascade children.</criterion>
-    <criterion id="AC-06">GET /api/projects/:projectId/documents/search?q=keyword — full-text search trong project.</criterion>
-    <criterion id="AC-07">PATCH /api/projects/:projectId/documents/:id/move — move document (đổi parentId, reorder).</criterion>
-    <criterion id="AC-08">Tất cả endpoints yêu cầu authentication (JWT).</criterion>
-    <criterion id="AC-09">Validate projectId tồn tại trước khi thao tác document.</criterion>
-  </acceptance-criteria>
 </feature>
+
+## Server
+- [x] GET /api/projects/:projectId/documents — list all documents trong project
+- [x] POST /api/projects/:projectId/documents { title?, parentId?, content? } → create
+- [x] GET /api/projects/:projectId/documents/:id — get document detail
+- [x] PATCH /api/projects/:projectId/documents/:id { title?, content?, icon?, cover? } → update
+- [x] DELETE /api/projects/:projectId/documents/:id → cascade delete children
+- [x] GET /api/projects/:projectId/documents/search?q=keyword → full-text search
+- [x] GET /api/documents/resolve/:id → resolve document by ID (không cần projectId)
+- [x] Tất cả endpoints yêu cầu auth (JWT hoặc API key)
+- [x] Validate projectId tồn tại trước khi thao tác document

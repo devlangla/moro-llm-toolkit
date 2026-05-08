@@ -45,6 +45,24 @@ export const adminNavItems = allNavItems
 // Combined for backwards compat
 export const navItems = [...mainNavItems, ...adminNavItems];
 
+// Helper to recursively render routes (supports layout routes with children)
+function renderRoute(r: ModuleRoute) {
+  if (r.children && r.children.length > 0) {
+    return (
+      <Route key={r.path} path={r.path} element={<r.element />}>
+        {r.children.map((child) => {
+          // Empty path = index route (renders when parent path matches exactly)
+          if (child.path === "") {
+            return <Route key="__index" index element={<child.element />} />;
+          }
+          return renderRoute(child);
+        })}
+      </Route>
+    );
+  }
+  return <Route key={r.path} path={r.path} element={<r.element />} />;
+}
+
 // Render routes
 export function AppRoutes() {
   const authRoutes = loadedModules.flatMap((m) =>
@@ -83,9 +101,7 @@ export function AppRoutes() {
             </AuthGuard>
           }
         >
-          {authRoutes.map((r) => (
-            <Route key={r.path} path={r.path} element={<r.element />} />
-          ))}
+          {authRoutes.map((r) => renderRoute(r))}
         </Route>
 
         {/* No layout routes */}

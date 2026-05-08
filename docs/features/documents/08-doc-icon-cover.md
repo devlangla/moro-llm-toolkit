@@ -5,7 +5,6 @@
     <group>Documents</group>
     <status>planned</status>
     <priority>p2</priority>
-    <updated>2026-05-01</updated>
   </meta>
 
   <overview>
@@ -20,13 +19,16 @@
       <benefit>dễ nhận diện document trong sidebar và khi browse</benefit>
     </story>
   </user-stories>
-
-  <acceptance-criteria>
-    <criterion id="AC-01">Click icon placeholder → emoji picker mở ra.</criterion>
-    <criterion id="AC-02">Chọn emoji → lưu và hiển thị trên sidebar + editor header.</criterion>
-    <criterion id="AC-03">Hover cover area → nút "Add cover" xuất hiện.</criterion>
-    <criterion id="AC-04">Cover: upload image hoặc chọn từ preset gradients/colors.</criterion>
-    <criterion id="AC-05">Cover hiển thị dạng banner ở đầu editor.</criterion>
-    <criterion id="AC-06">Nút "Remove" để xoá icon/cover.</criterion>
-  </acceptance-criteria>
 </feature>
+
+## Server
+- [ ] Document schema hỗ trợ fields: icon (emoji string), cover (URL hoặc preset)
+- [ ] PATCH endpoint nhận icon, cover
+
+## Web
+- [ ] Click icon placeholder → emoji picker
+- [ ] Chọn emoji → lưu, hiển thị trên sidebar + editor header
+- [ ] Hover cover area → nút "Add cover"
+- [ ] Cover: upload image hoặc chọn từ preset gradients/colors
+- [ ] Cover hiển thị dạng banner ở đầu editor
+- [ ] Nút "Remove" để xoá icon/cover

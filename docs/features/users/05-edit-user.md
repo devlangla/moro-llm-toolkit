@@ -3,9 +3,8 @@
     <id>user_edit</id>
     <title>Chỉnh sửa user</title>
     <group>Users</group>
-    <status>planned</status>
+    <status>done</status>
     <priority>p1</priority>
-    <updated>2026-04-28</updated>
   </meta>
 
   <overview>
@@ -20,13 +19,16 @@
       <benefit>cập nhật thông tin hoặc thay đổi quyền của user</benefit>
     </story>
   </user-stories>
-
-  <acceptance-criteria>
-    <criterion id="AC-01">Click vào user → dialog chỉnh sửa mở ra với dữ liệu đã điền sẵn.</criterion>
-    <criterion id="AC-02">Các trường có thể chỉnh sửa: Username, Email, Role.</criterion>
-    <criterion id="AC-03">Không thể chỉnh sửa role của super admin (field disabled).</criterion>
-    <criterion id="AC-04">Username và email validate unique (trừ chính user đó).</criterion>
-    <criterion id="AC-05">Nhấn Save → thông tin user được cập nhật ngay trong danh sách.</criterion>
-    <criterion id="AC-06">Nhấn Cancel → đóng dialog, không có thay đổi.</criterion>
-  </acceptance-criteria>
 </feature>
+
+## Server
+- [x] PATCH /api/users/:id { username?, email?, role? } → cập nhật user
+- [x] Username/email validate unique (trừ chính user đó)
+- [x] Không cho phép thay đổi role của superadmin
+
+## Web
+- [x] Click user row → dialog chỉnh sửa với dữ liệu đã điền sẵn
+- [x] Các trường: Username, Email, Role
+- [x] Role của superadmin → field disabled
+- [x] Save → cập nhật ngay trong danh sách
+- [x] Cancel → đóng dialog, không thay đổi

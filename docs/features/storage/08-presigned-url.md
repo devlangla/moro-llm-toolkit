@@ -1,38 +1,31 @@
 <feature>
   <meta>
-    <id>file_presigned_url</id>
-    <title>Presigned URL (có thời hạn)</title>
+    <id>storage_presigned_url</id>
+    <title>Presigned URL</title>
     <group>Storage</group>
-    <status>planned</status>
-    <priority>p0</priority>
-    <updated>2026-04-28</updated>
+    <status>done</status>
+    <priority>p1</priority>
   </meta>
 
   <overview>
-    Tạo presigned URL cho private objects — URL chứa signature và thời hạn,
-    cho phép truy cập tạm thời mà không cần credentials. Tương thích với
-    S3 presigned URL format để S3 SDK (getSignedUrl) hoạt động.
+    Tạo URL tạm thời (presigned) cho phép truy cập file private mà không
+    cần auth header. URL có thời hạn (TTL).
   </overview>
 
   <user-stories>
     <story id="US-01">
-      <actor>Developer</actor>
-      <action>dùng S3 SDK getSignedUrl() để tạo link tạm</action>
-      <benefit>chia sẻ file private có thời hạn mà không expose credentials</benefit>
-    </story>
-    <story id="US-02">
-      <actor>User (UI)</actor>
-      <action>click "Get Link" trên file → chọn thời hạn → copy URL</action>
-      <benefit>chia sẻ file tạm thời từ giao diện web</benefit>
+      <actor>User / API</actor>
+      <action>tạo presigned URL để share file private</action>
+      <benefit>chia sẻ file tạm thời mà không cần cấp quyền vĩnh viễn</benefit>
     </story>
   </user-stories>
-
-  <acceptance-criteria>
-    <criterion id="AC-01">Implement S3 presigned URL: query params X-Amz-Algorithm, X-Amz-Credential, X-Amz-Date, X-Amz-Expires, X-Amz-Signature.</criterion>
-    <criterion id="AC-02">Server validate signature + expiry khi nhận request với presigned params.</criterion>
-    <criterion id="AC-03">Hết hạn → trả 403 + XML error "Request has expired".</criterion>
-    <criterion id="AC-04">Hỗ trợ presigned PUT (upload qua presigned URL, browser direct upload).</criterion>
-    <criterion id="AC-05">REST API: POST /api/storage/{bucket}/{key}/presign { expiresIn: seconds } → { url, expiresAt }.</criterion>
-    <criterion id="AC-06">Thời hạn mặc định: 3600s (1h), tối đa: 604800s (7 ngày).</criterion>
-  </acceptance-criteria>
 </feature>
+
+## Server
+- [x] POST /api/storage/buckets/:bucketId/objects/:key/presign { expiresIn? } → trả signed URL
+- [x] URL chứa token + expiry, validate khi truy cập
+- [x] Default TTL: 1 giờ, max: 7 ngày
+
+## Web
+- [x] Nút "Get Presigned URL" trên file trong private bucket
+- [x] Click → copy URL, hiển thị thời hạn

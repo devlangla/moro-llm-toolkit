@@ -1,7 +1,7 @@
 {
   "name": "web",
   "private": true,
-  "version": "0.2.5",
+  "version": "0.2.6",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@ant-design/icons": "^6.2.2",
-    "@solar-icons/react": "^1.1.0",
+    "@monaco-editor/react": "^4.7.0",
     "ag-grid-community": "^35.2.1",
     "ag-grid-react": "^35.2.1",
     "antd": "^6.3.7",

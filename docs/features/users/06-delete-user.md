@@ -3,9 +3,8 @@
     <id>user_delete</id>
     <title>Xoá user</title>
     <group>Users</group>
-    <status>planned</status>
+    <status>done</status>
     <priority>p1</priority>
-    <updated>2026-04-28</updated>
   </meta>
 
   <overview>
@@ -20,14 +19,16 @@
       <benefit>quản lý danh sách user gọn gàng, thu hồi quyền truy cập</benefit>
     </story>
   </user-stories>
-
-  <acceptance-criteria>
-    <criterion id="AC-01">Nút "Delete" hiển thị trên mỗi user row (trừ super admin).</criterion>
-    <criterion id="AC-02">Không thể xoá super admin — nút disabled hoặc ẩn.</criterion>
-    <criterion id="AC-03">Không thể tự xoá chính mình.</criterion>
-    <criterion id="AC-04">Click Delete → dialog xác nhận "Xoá user [username]?" xuất hiện.</criterion>
-    <criterion id="AC-05">Xác nhận → user biến mất khỏi danh sách, session bị invalidate.</criterion>
-    <criterion id="AC-06">Huỷ dialog → không có thay đổi.</criterion>
-    <criterion id="AC-07">Toast "Đã xoá user [username]" sau khi thành công.</criterion>
-  </acceptance-criteria>
 </feature>
+
+## Server
+- [x] DELETE /api/users/:id → xoá user, invalidate sessions
+- [x] Không cho phép xoá superadmin
+- [x] Không cho phép tự xoá chính mình
+
+## Web
+- [x] Nút Delete trên mỗi user row (trừ superadmin)
+- [x] Click Delete → dialog xác nhận "Xoá user [username]?"
+- [x] Xác nhận → user biến mất khỏi danh sách
+- [x] Huỷ → không thay đổi
+- [x] Toast "Đã xoá user [username]" sau khi thành công

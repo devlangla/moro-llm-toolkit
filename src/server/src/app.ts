@@ -14,6 +14,8 @@ import storageModule, { MODULE_PREFIX as STORAGE_PREFIX } from "./modules/storag
 import usersModule, { MODULE_PREFIX as USERS_PREFIX } from "./modules/users/user.module.js";
 import variablesModule, { MODULE_PREFIX as VARIABLES_PREFIX } from "./modules/variables/variables.module.js";
 import systemModule, { MODULE_PREFIX as SYSTEM_PREFIX } from "./modules/system/system.module.js";
+import dynamicApisModule, { MODULE_PREFIX as DYNAMIC_APIS_PREFIX } from "./modules/dynamic-apis/dynamic-api.module.js";
+import { registerDynamicApiRunner } from "./modules/dynamic-apis/dynamic-api.runner.js";
 import Fastify from "fastify";
 import type { FastifyError, FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
@@ -44,6 +46,7 @@ const MODULE_REGISTRY = [
   { name: "users",            plugin: usersModule,            prefix: USERS_PREFIX },
   { name: "variables",        plugin: variablesModule,        prefix: VARIABLES_PREFIX },
   { name: "system",           plugin: systemModule,           prefix: SYSTEM_PREFIX },
+  { name: "dynamic-apis",     plugin: dynamicApisModule,      prefix: DYNAMIC_APIS_PREFIX },
 ] as const;
 
 async function loadModules(app: FastifyInstance) {
@@ -131,6 +134,9 @@ export async function createApp() {
   // ── Public file serving (no auth) ─────────────────────────────────────────
   const { registerPublicFileRoutes } = await import("./modules/storage/storage.controller.js");
   registerPublicFileRoutes(app);
+
+  // ── Dynamic API runner (catch-all /apis/*) ─────────────────────────────────
+  registerDynamicApiRunner(app);
 
   // ── MCP Streamable HTTP Transport — per-server endpoints ───────────────────
   // Supports both POST (messages) and GET (SSE stream) on the same endpoint.

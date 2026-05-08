@@ -17,6 +17,7 @@ export const createDocumentBodySchema = z.object({
   title: z.string().min(1).max(500).optional().default("Untitled"),
   icon: z.string().max(64).nullable().optional(),
   content: z.string().optional().default(""),  // markdown text
+  parentId: z.string().nullable().optional(),   // nested sub-page
 });
 
 // ── Update Document ─────────────────────────────────────────────────────────────
@@ -26,6 +27,7 @@ export const updateDocumentBodySchema = z.object({
   icon: z.string().max(64).nullable().optional(),
   cover: z.string().max(2000).nullable().optional(),
   content: z.string().optional(),  // markdown text
+  parentId: z.string().nullable().optional(),   // move to different parent
 });
 
 // ── Search ──────────────────────────────────────────────────────────────────────

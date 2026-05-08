@@ -11,6 +11,7 @@ import { ApiDocsResource } from "./resources/api-doc";
 import { StorageResource } from "./resources/storage";
 import { McpToolServersResource } from "./resources/mcp-tool-server";
 import { SystemResource } from "./resources/system";
+import { DynamicApisResource } from "./resources/dynamic-api";
 
 class MoroClient {
   private http: HttpClient;
@@ -27,6 +28,7 @@ class MoroClient {
   public readonly storage: StorageResource;
   public readonly mcpToolServers: McpToolServersResource;
   public readonly system: SystemResource;
+  public readonly dynamicApis: DynamicApisResource;
 
   constructor(options: ClientOptions) {
     this.http = new HttpClient(options);
@@ -42,6 +44,7 @@ class MoroClient {
     this.storage = new StorageResource(this.http);
     this.mcpToolServers = new McpToolServersResource(this.http);
     this.system = new SystemResource(this.http);
+    this.dynamicApis = new DynamicApisResource(this.http);
   }
 
   get accessToken() {

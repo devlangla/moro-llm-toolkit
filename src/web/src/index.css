@@ -235,3 +235,36 @@
   animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
   opacity: 0;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   GHOST INPUT (borderless until hover/focus)
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.endpoint-name-input {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-ink);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  outline: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.endpoint-name-input::placeholder {
+  color: var(--color-muted-soft);
+}
+
+.endpoint-name-input:hover {
+  border-color: var(--color-hairline);
+  background-color: var(--color-canvas-soft);
+}
+
+.endpoint-name-input:focus {
+  border-color: var(--color-hairline);
+  background-color: var(--color-surface-card);
+}
