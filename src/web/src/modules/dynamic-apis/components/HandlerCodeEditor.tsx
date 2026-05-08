@@ -1,10 +1,12 @@
 import Editor, { type Monaco } from "@monaco-editor/react";
-import type { editor, Position } from "monaco-editor";
 import { Dropdown } from "antd";
 import { BookOpen, WrapText } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 
 type EditorInstance = Parameters<NonNullable<React.ComponentProps<typeof Editor>["onMount"]>>[0];
+type MonacoInstance = Parameters<NonNullable<React.ComponentProps<typeof Editor>["onMount"]>>[1];
+type ITextModel = Parameters<Parameters<ReturnType<MonacoInstance["languages"]["registerCompletionItemProvider"]>["provideCompletionItems"]>>[0];
+type IPosition = Parameters<Parameters<ReturnType<MonacoInstance["languages"]["registerCompletionItemProvider"]>["provideCompletionItems"]>>[1];
 
 // ── Example Snippets ────────────────────────────────────────────────────────
 
@@ -260,7 +262,7 @@ declare var context: {
   // ── CompletionItemProvider ──────────────────────────────────────────────
   monaco.languages.registerCompletionItemProvider("javascript", {
     triggerCharacters: ["."],
-    provideCompletionItems: (model: editor.ITextModel, position: Position) => {
+    provideCompletionItems: (model: ITextModel, position: IPosition) => {
       const line = model.getValueInRange({
         startLineNumber: position.lineNumber,
         startColumn: 1,
@@ -315,7 +317,7 @@ declare var context: {
 
   // ── HoverProvider ───────────────────────────────────────────────────────
   monaco.languages.registerHoverProvider("javascript", {
-    provideHover: (model: editor.ITextModel, position: Position) => {
+    provideHover: (model: ITextModel, position: IPosition) => {
       const word = model.getWordAtPosition(position);
       if (!word) return null;
 
